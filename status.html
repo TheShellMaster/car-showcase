@@ -120,7 +120,7 @@
     lines.push("— Rapport diagnostic 458 Spider —");
     lines.push($meta.textContent);
     lines.push("");
-    var keys = ["1","2","3","4","5","6","7","8","9","10","verdict"];
+    var keys = ["1","2","3","4","5","6","7","8","9","10","11","verdict"];
     for(var i=0;i<keys.length;i++){
       var k = keys[i];
       if(results[k]) lines.push(results[k]);
@@ -132,21 +132,29 @@
     var webglOk = results["7"] && results["7"].indexOf("OK") !== -1;
     var importOk = results["5"] && results["5"].indexOf("Oui") !== -1;
     var modulesOk = results["6"] && results["6"].indexOf("Oui") !== -1;
-    var cdnFail = results["3"] && results["3"].indexOf("\u00c9CHEC") !== -1;
-    var debitCdn = results["10"] || "";
+    var debitSame = results["9"] || "";
     var debitVal = -1;
-    var m = debitCdn.match(/(\d+)\s*Ko\/s/);
+    var m = debitSame.match(/(\d+)\s*Ko\/s/);
     if(m) debitVal = parseInt(m[1],10);
+    var isSlow = false;
+    var isFail = debitSame.indexOf("\u00c9CHEC") !== -1 || debitSame.indexOf("en cours") !== -1;
+    // estimation 2100 Ko / debit
+    var est = -1;
+    if(debitVal > 0) est = 2100 / debitVal;
+    if(isFail) isSlow = true;
+    else if(est > 20) isSlow = true;
     var text = "";
     var cls = "";
     if(!webglOk || !importOk || !modulesOk){
-      text = "Verdict : Navigateur incompatible (WebGL / import maps)";
+      text = "Verdict : Navigateur incompatible (WebGL ou import maps absents)";
       cls = "fail";
-    } else if(cdnFail || (debitVal !== -1 && debitVal < 100)){
-      text = "Verdict : CDN injoignable ou trop lent : le studio ne peut pas charger Three.js";
+    } else if(isSlow){
+      var nStr = est > 0 ? Math.round(est * 10) / 10 + " s" : "inconnu";
+      text = "Verdict : Connexion trop lente : \u2248 " + nStr + " pour charger le studio (Three.js 1,3 Mo + mod\u00e8le 0,76 Mo)";
       cls = "fail";
     } else {
-      text = "Verdict : Tout est joignable : le blocage vient du chargement 3D, voir D\u00e9pannage";
+      var n2 = est > 0 ? Math.round(est * 10) / 10 + " s" : "quelques secondes";
+      text = "Verdict : Tout est joignable et compatible : le studio devrait se charger en \u2248 " + n2;
       cls = "ok";
     }
     if(verdictEl){
@@ -352,7 +360,7 @@
       updateReport(); computeVerdict();
     });
 
-    var r10 = createRow("10 \u2014 D\u00e9bit CDN", "GET https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js Range: bytes=0-262143 (256 Ko)");
+    var r10 = createRow("10 \u2014 D\u00e9bit CDN (informatif, plus utilis\u00e9 par le studio)", "GET https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js Range: bytes=0-262143 (256 Ko)");
     $tests.appendChild(r10.el);
     results["10"] = "10 D\u00e9bit CDN: en cours…";
     updateReport();
@@ -362,11 +370,28 @@
         var kbs = Math.round(kb / (ms/1000));
         var est = Math.round((1314.681 / kbs) * 10) / 10;
         var note = extra ? " " + extra : "";
-        r10.set(true, kbs + " Ko/s", "T\u00e9l\u00e9charg\u00e9 " + Math.round(kb) + " Ko en " + fmtMs(ms) + " \u2014 " + kbs + " Ko/s" + note + " \u2014 Three.js \u2248 " + est + " s");
-        results["10"] = "10 D\u00e9bit CDN: " + kbs + " Ko/s (" + Math.round(kb) + " Ko en " + fmtMs(ms) + ")" + note + " est. Three.js " + est + "s";
+        r10.set(true, kbs + " Ko/s", "T\u00e9l\u00e9charg\u00e9 " + Math.round(kb) + " Ko en " + fmtMs(ms) + " \u2014 " + kbs + " Ko/s" + note + " \u2014 Three.js \u2248 " + est + " s (informatif)");
+        results["10"] = "10 D\u00e9bit CDN (informatif): " + kbs + " Ko/s (" + Math.round(kb) + " Ko en " + fmtMs(ms) + ")" + note + " est. Three.js " + est + "s";
       } else {
-        r10.set(false, "\u2718 \u00c9chec", (extra || ("status " + status)) + " en " + fmtMs(ms) + " \u2014 CDN trop lent ou injoignable");
-        results["10"] = "10 D\u00e9bit CDN: \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
+        r10.set(false, "\u2718 \u00c9chec", (extra || ("status " + status)) + " en " + fmtMs(ms) + " \u2014 informatifs (le studio n\u2019utilise plus le CDN)");
+        results["10"] = "10 D\u00e9bit CDN (informatif): \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
+      }
+      updateReport(); computeVerdict();
+    });
+
+    var r11 = createRow("11 \u2014 Chargement r\u00e9el du studio", "GET vendor/three/build/three.module.js complet (m\u00eame origine)");
+    $tests.appendChild(r11.el);
+    results["11"] = "11 Chargement r\u00e9el du studio: en cours…";
+    updateReport();
+    xhrTest("vendor/three/build/three.module.js", null, 8000, function(ok, status, bytes, ms, extra){
+      if(ok && ms > 0){
+        var kb = bytes / 1024;
+        var kbs = Math.round(kb / (ms/1000));
+        r11.set(true, kbs + " Ko/s", "T\u00e9l\u00e9charg\u00e9 " + Math.round(kb) + " Ko en " + fmtMs(ms) + " \u2014 " + kbs + " Ko/s" + (extra ? " " + extra : "") + " \u2014 si cette ligne passe, l\u2019import map passera");
+        results["11"] = "11 Chargement r\u00e9el du studio (three.module.js): " + kbs + " Ko/s (" + Math.round(kb) + " Ko en " + fmtMs(ms) + ")";
+      } else {
+        r11.set(false, "\u2718 \u00c9chec", (extra || ("status " + status)) + " en " + fmtMs(ms) + " \u2014 le studio ne peut pas charger Three.js local");
+        results["11"] = "11 Chargement r\u00e9el du studio: \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
       }
       updateReport(); computeVerdict();
     });
