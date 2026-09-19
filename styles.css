@@ -484,3 +484,58 @@ body.ready .loader {
     padding-bottom: 0.75rem;
   }
 }
+
+/* Fallback WebGL indisponible — bloc .nogl affiché dans #loader */
+body.no-webgl .loader{
+  background: rgba(238,240,243,.94);
+  pointer-events: none;
+  display: grid;
+  place-content: center;
+  padding: 1rem var(--gutter);
+  overflow-y: auto;
+}
+body.no-webgl .loader .nogl{ pointer-events: auto; }
+
+.nogl{
+  max-width: 36rem;
+  width: 100%;
+  padding: 2rem 2rem 1.75rem;
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 2px solid var(--ink);
+  text-align: left;
+}
+.nogl h2{
+  margin: 0 0 .75rem;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.nogl p{ margin: .75rem 0; color: var(--ink-soft); }
+.nogl ol{ margin: .75rem 0 1rem 1.25rem; padding: 0; color: var(--ink-soft); }
+.nogl ol li{ margin-top: .5rem; }
+.nogl code{ font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .875em; background: rgba(21,24,29,.06); padding: .1em .35em; border-radius: 4px; }
+.nogl a{ color: var(--paint); border-bottom: 1px solid rgba(16,48,95,.3); }
+.nogl a:hover{ border-color: var(--paint); }
+.nogl-copy{
+  display: inline-block;
+  margin-left: .4rem;
+  padding: .15rem .5rem;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.nogl-copy:hover{ background: var(--paper); }
+
+@media (max-width: 720px){
+  .nogl{ padding: 1.5rem 1.25rem; }
+  .nogl h2{ font-size: 1.35rem; }
+}

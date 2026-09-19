@@ -277,6 +277,16 @@ git push</code></pre>
         <h2>Dépannage</h2>
         <p>Si le site ne s'ouvre pas sur votre téléphone, ouvrez d'abord la <a href="status.html">page de diagnostic</a> : elle affiche en une seconde si le réseau, le CDN et le navigateur sont en cause, et permet de copier un rapport à coller au développeur.</p>
         <dl class="docs-faq">
+          <dt>Message « Ce navigateur ne peut pas afficher la 3D » (WebGL désactivé)</dt>
+          <dd>
+            Le site a détecté que WebGL est indisponible et affiche un écran de repli à la place du chargement. Le contenu textuel reste lisible en dessous.
+            <ul>
+              <li><strong>Chrome / Edge / Brave / Opera</strong> : ouvrez <code>chrome://settings/system</code> → « Utiliser l'accélération graphique si disponible » → Activé → Relancer. Si besoin : <code>chrome://flags/#ignore-gpu-blocklist</code> → Enabled → Relancer. Vérifiez <code>chrome://gpu</code>.</li>
+              <li><strong>Firefox</strong> : <code>about:config</code> → <code>webgl.disabled</code> = false, <code>webgl.force-enabled</code> = true. Vérifiez <code>about:support</code>.</li>
+              <li><strong>Safari</strong> : Réglages → Avancé → Afficher le menu Développement → Fonctionnalités expérimentales → WebGL activé, ou mettez à jour iOS/macOS (Safari 15+).</li>
+              <li>Sinon, installez Chrome ou Firefox à jour. La <a href="status.html">page de diagnostic</a> confirme WebGL en 1 s.</li>
+            </ul>
+          </dd>
           <dt>La page reste sur l'écran de chargement</dt>
           <dd>
             Le modèle (759 Ko) ou Three.js n'a pas fini d'arriver. Sur une connexion mobile lente, comptez 3 à 10 secondes au premier
@@ -288,11 +298,6 @@ git push</code></pre>
             https et la barre finale). Essayer en navigation privée pour écarter un cache ou une extension, puis avec les données
             mobiles au lieu du Wi‑Fi (ou l'inverse). Certains navigateurs « économiseurs de données » (mode Lite d'Opera, Chrome
             avec économiseur activé) réécrivent les pages via un proxy et cassent les modules ES : les désactiver.
-          </dd>
-          <dt>Écran noir ou message « WebGL n'est pas disponible »</dt>
-          <dd>
-            Le navigateur n'a pas d'accélération graphique. Sur Android, utiliser Chrome ou Firefox à jour ; sur iOS, Safari 15
-            ou plus récent. Sur ordinateur, vérifier que l'accélération matérielle n'est pas désactivée dans les réglages du navigateur.
           </dd>
           <dt>Les images saccadent</dt>
           <dd>

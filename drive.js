@@ -53,10 +53,10 @@ const fail = (message) => {
   loaderBar.style.width = "0%";
 };
 window.addEventListener("error", (e) => fail("Une erreur a interrompu la conduite : " + (e.message || "erreur inconnue") + ". Voir la page Documentation, section Dépannage."), { once: true });
-const probe = document.createElement("canvas");
-if (!(probe.getContext("webgl2") || probe.getContext("webgl"))) {
-  throw new Error("WebGL n'est pas disponible sur ce navigateur");
-}
+// WebGL déjà testé par le script inline no-webgl ; on ne démarre que si présent
+if(document.body.classList.contains("no-webgl")){
+  // le bloc .nogl est déjà affiché, on ne lance pas la conduite
+} else {
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
@@ -947,3 +947,4 @@ function animate() {
 
 stepWorld();
 animate();
+}
