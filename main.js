@@ -14,6 +14,17 @@ const finePointer = window.matchMedia("(pointer: fine)").matches;
 
 // Renderer
 
+// Fail loudly instead of leaving the loader on screen forever.
+const fail = (message) => {
+  loaderText.textContent = message;
+  loaderBar.style.width = "0%";
+};
+window.addEventListener("error", (e) => fail("Une erreur a interrompu le studio : " + (e.message || "erreur inconnue") + ". Voir la page Documentation, section Dépannage."), { once: true });
+const probe = document.createElement("canvas");
+if (!(probe.getContext("webgl2") || probe.getContext("webgl"))) {
+  throw new Error("WebGL n'est pas disponible sur ce navigateur");
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);

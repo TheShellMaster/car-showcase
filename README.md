@@ -7,6 +7,11 @@ Site statique en Three.js, sans build : deux pages HTML, du CSS et deux modules 
 - `drive.html` — conduite libre sur une autoroute générique à trois voies : clavier sur desktop,
   curseur de direction analogique + boutons Gaz/Frein sur écran tactile. Trois caméras (poursuite, capot, cinéma).
 
+Documentation complète (utilisation, architecture, déploiement, dépannage) : `docs.html`,
+en ligne sur <https://theshellmaster.github.io/car-showcase/docs.html>.
+
+Site publié : <https://theshellmaster.github.io/car-showcase/>
+
 ## Lancer en local
 
 ```bash
@@ -20,6 +25,7 @@ Puis ouvrir <http://localhost:8765/>. Depuis un téléphone sur le même réseau
 | Fichier | Rôle |
 | --- | --- |
 | `main.js` / `styles.css` | Studio : scène, matériaux, presets de caméra, rotation tactile |
+| `docs.html` / `docs.css` | Documentation |
 | `drive.js` / `drive.css` | Simulateur : physique à pas fixe, route infinie, caméras, HUD, son moteur synthétisé, contrôles tactiles |
 | `assets/ferrari.glb` | Modèle Draco-compressé (exemple three.js, © vicent091036, CC BY 4.0) |
 

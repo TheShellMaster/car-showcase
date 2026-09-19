@@ -1,0 +1,227 @@
+/* Documentation page: a calm two-column reading layout on the shared paper background. */
+
+.docs-page {
+  background:
+    radial-gradient(120% 60% at 50% 0%, #f6f7f9 0%, transparent 60%),
+    var(--paper);
+}
+
+.docs-page .top {
+  pointer-events: auto;
+}
+
+.docs {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 44rem);
+  gap: clamp(2rem, 6vw, 6rem);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 8rem var(--gutter) 6rem;
+}
+
+.docs-side {
+  position: sticky;
+  top: 6.5rem;
+  align-self: start;
+  font-size: 0.9375rem;
+}
+
+.docs-side-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.docs-toc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border-left: 1px solid var(--line);
+}
+
+.docs-toc a {
+  padding: 0.15rem 0 0.15rem 1rem;
+  margin-left: -1px;
+  border-left: 1px solid transparent;
+  color: var(--ink-soft);
+  transition: color 200ms, border-color 200ms;
+}
+
+.docs-toc a:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.docs-title {
+  margin: 0.25rem 0 1rem;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  font-variation-settings: "wdth" 90;
+}
+
+.docs-lead {
+  margin: 0 0 3rem;
+  font-size: 1.1875rem;
+  color: var(--ink-soft);
+}
+
+.docs-main section {
+  padding-top: 2.5rem;
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.docs-main h2 {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.docs-main h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.docs-main p,
+.docs-main li,
+.docs-main dd {
+  color: #2b3038;
+}
+
+.docs-main ul {
+  padding-left: 1.25rem;
+}
+
+.docs-main li + li {
+  margin-top: 0.4rem;
+}
+
+.docs-main a {
+  color: var(--paint);
+  border-bottom: 1px solid rgba(16, 48, 95, 0.3);
+}
+
+.docs-main a:hover {
+  border-color: var(--paint);
+}
+
+code,
+kbd {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.docs-main code {
+  padding: 0.1em 0.35em;
+  background: rgba(21, 24, 29, 0.06);
+  border-radius: 4px;
+}
+
+.docs-main kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0.05em 0.45em;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+.docs-main pre {
+  margin: 0.75rem 0 1rem;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: 8px;
+  line-height: 1.55;
+}
+
+.docs-main pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+}
+
+.docs-table {
+  width: 100%;
+  margin: 0.75rem 0 1rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.docs-table th,
+.docs-table td {
+  padding: 0.65rem 0.75rem 0.65rem 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.docs-table th {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.docs-table td:first-child {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.docs-faq dt {
+  margin-top: 1.5rem;
+  font-weight: 600;
+}
+
+.docs-faq dd {
+  margin: 0.35rem 0 0;
+}
+
+.docs-foot {
+  margin-top: 2rem;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 860px) {
+  .docs {
+    grid-template-columns: 1fr;
+    padding-top: 6.5rem;
+  }
+
+  .docs-side {
+    position: static;
+  }
+
+  .docs-toc {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    border-left: 0;
+  }
+
+  .docs-toc a {
+    padding: 0.2rem 0;
+    margin: 0;
+    border-left: 0;
+  }
+
+  .docs-table td:first-child {
+    white-space: normal;
+  }
+
+  /* The docs nav is short enough to stay fully visible on phones. */
+  .docs-page .top-nav a {
+    display: inline;
+  }
+}

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Documentation — 458 Spider</title>
+  <meta name="description" content="Documentation complète du studio interactif et du simulateur d'autoroute 458 Spider : utilisation, commandes, architecture, déploiement, dépannage." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="docs.css?v=1" />
+</head>
+<body class="docs-page">
+  <header class="top">
+    <a class="brand" href="index.html">Studio</a>
+    <nav class="top-nav">
+      <a href="index.html">Studio</a>
+      <a href="drive.html">Conduire</a>
+      <a class="top-nav-drive" href="https://github.com/TheShellMaster/car-showcase">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="docs">
+    <aside class="docs-side">
+      <p class="docs-side-title">Sommaire</p>
+      <nav class="docs-toc">
+        <a href="#presentation">Présentation</a>
+        <a href="#acces">Accéder au site</a>
+        <a href="#studio">Le studio</a>
+        <a href="#conduite">La conduite</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#technique">Fonctionnement technique</a>
+        <a href="#performance">Performance</a>
+        <a href="#deploiement">Déploiement</a>
+        <a href="#modifier">Modifier le projet</a>
+        <a href="#depannage">Dépannage</a>
+        <a href="#credits">Crédits et licences</a>
+      </nav>
+    </aside>
+
+    <main class="docs-main">
+      <p class="hero-kicker">Documentation</p>
+      <h1 class="docs-title">458 Spider, studio et simulateur</h1>
+      <p class="docs-lead">
+        Tout ce qu'il faut savoir pour utiliser, comprendre, modifier et déployer ce site :
+        un studio 3D interactif autour d'une Ferrari 458 Spider et un simulateur de conduite
+        sur autoroute, réalisés en Three.js sans aucune étape de compilation.
+      </p>
+
+      <section id="presentation">
+        <h2>Présentation</h2>
+        <p>Le site se compose de trois pages statiques :</p>
+        <table class="docs-table">
+          <thead><tr><th>Page</th><th>Rôle</th></tr></thead>
+          <tbody>
+            <tr><td><a href="index.html"><code>index.html</code></a></td><td>Le studio. La voiture réagit au pointeur, et chaque section défilée déclenche un mouvement de caméra vers un détail : aérodynamique, jantes, moteur, habitacle, vue de dessus, fiche technique.</td></tr>
+            <tr><td><a href="drive.html"><code>drive.html</code></a></td><td>La conduite libre. Une autoroute infinie à trois voies, une physique simplifiée mais crédible, trois caméras, un compteur et un son moteur synthétisé.</td></tr>
+            <tr><td><code>docs.html</code></td><td>Cette page.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Aucun serveur applicatif, aucune base de données, aucun <code>npm install</code> : des fichiers
+          HTML, CSS et JavaScript servis tels quels. Three.js est chargé depuis le CDN jsDelivr grâce à un
+          <em>import map</em>.
+        </p>
+      </section>
+
+      <section id="acces">
+        <h2>Accéder au site</h2>
+        <h3>En ligne</h3>
+        <p>
+          Le site est publié par GitHub Pages à l'adresse
+          <a href="https://theshellmaster.github.io/car-showcase/">theshellmaster.github.io/car-showcase</a>.
+          Chaque <code>git push</code> sur la branche <code>main</code> le redéploie en une minute environ.
+        </p>
+        <h3>En local</h3>
+        <p>Les modules ES et les chargeurs de fichiers exigent un serveur HTTP ; ouvrir <code>index.html</code> directement depuis le disque ne fonctionne pas.</p>
+        <pre><code>cd car-showcase
+python3 -m http.server 8765</code></pre>
+        <p>Puis ouvrir <code>http://localhost:8765/</code>.</p>
+        <h3>Depuis un téléphone sur le même réseau</h3>
+        <p>
+          Trouver l'adresse IP locale du PC (<code>hostname -I</code> sous Linux, <code>ipconfig</code> sous Windows) et ouvrir
+          <code>http://&lt;ip-du-pc&gt;:8765/</code> sur le téléphone. Si la page ne répond pas, c'est presque toujours
+          le pare-feu du PC qui bloque le port 8765, ou un point d'accès qui isole ses clients.
+        </p>
+      </section>
+
+      <section id="studio">
+        <h2>Le studio</h2>
+        <h3>Commandes</h3>
+        <table class="docs-table">
+          <thead><tr><th>Appareil</th><th>Geste</th><th>Effet</th></tr></thead>
+          <tbody>
+            <tr><td>Souris</td><td>Déplacer le curseur</td><td>La voiture pivote légèrement et la caméra se décale pour suivre le regard.</td></tr>
+            <tr><td>Souris</td><td>Faire défiler</td><td>Passage d'une section à l'autre ; la caméra vole vers le détail correspondant.</td></tr>
+            <tr><td>Tactile</td><td>Glisser horizontalement</td><td>Rotation de la voiture avec inertie.</td></tr>
+            <tr><td>Tactile</td><td>Glisser verticalement</td><td>Défilement normal de la page.</td></tr>
+            <tr><td>Tous</td><td>Liens du haut de page</td><td>Sauter directement à une section ou à la conduite.</td></tr>
+          </tbody>
+        </table>
+        <h3>Sections</h3>
+        <p>
+          Chaque section porte un attribut <code>data-view</code> (<code>hero</code>, <code>aero</code>, <code>wheel</code>,
+          <code>rear</code>, <code>top</code>, <code>drive</code>, <code>specs</code>). Un <code>IntersectionObserver</code>
+          détecte la section la plus visible et applique le préréglage de caméra associé, défini dans l'objet
+          <code>views</code> de <code>main.js</code> (position, cible, champ de vision).
+        </p>
+      </section>
+
+      <section id="conduite">
+        <h2>La conduite</h2>
+        <h3>Clavier (ordinateur)</h3>
+        <table class="docs-table">
+          <thead><tr><th>Touche</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>↑</kbd> ou <kbd>Z</kbd> / <kbd>W</kbd></td><td>Accélérer</td></tr>
+            <tr><td><kbd>↓</kbd> ou <kbd>S</kbd></td><td>Freiner, puis marche arrière</td></tr>
+            <tr><td><kbd>←</kbd> <kbd>→</kbd> ou <kbd>Q</kbd> / <kbd>A</kbd> <kbd>D</kbd></td><td>Braquer</td></tr>
+            <tr><td><kbd>Espace</kbd></td><td>Frein à main</td></tr>
+            <tr><td><kbd>C</kbd></td><td>Changer de caméra</td></tr>
+            <tr><td><kbd>M</kbd></td><td>Couper ou rétablir le son</td></tr>
+            <tr><td>Souris</td><td>Regarder autour de la voiture (caméra poursuite) ou tourner la tête (caméra capot)</td></tr>
+          </tbody>
+        </table>
+        <h3>Écran tactile</h3>
+        <p>
+          En bas à gauche, un <strong>curseur de direction</strong> analogique : plus on l'écarte du centre,
+          plus la voiture braque ; il revient au centre dès qu'on le relâche. En bas à droite, deux boutons
+          <strong>Frein</strong> et <strong>Gaz</strong>. Glisser ailleurs sur l'écran oriente le regard. Le bouton
+          « Caméra » en haut à droite change de point de vue.
+        </p>
+        <h3>Caméras</h3>
+        <table class="docs-table">
+          <thead><tr><th>Mode</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>Poursuite</td><td>Derrière la voiture, s'éloigne et s'élargit avec la vitesse, pivote avec le pointeur. Recule un peu sur les écrans en portrait.</td></tr>
+            <tr><td>Capot</td><td>Posée sur le capot, juste devant le pare-brise. Le pointeur tourne la tête.</td></tr>
+            <tr><td>Cinéma</td><td>Vue latérale basse, toujours côté extérieur de la route. Si la voiture longe la glissière, la caméra glisse vers l'arrière au lieu de traverser la barrière.</td></tr>
+          </tbody>
+        </table>
+        <h3>Affichage</h3>
+        <p>
+          Le HUD indique la vitesse (km/h), le rapport engagé et le régime moteur. Le son est synthétisé avec la Web Audio API
+          à partir du régime : aucun fichier audio n'est chargé. Il ne démarre qu'après une première interaction, comme l'exigent les navigateurs.
+        </p>
+      </section>
+
+      <section id="architecture">
+        <h2>Architecture</h2>
+        <table class="docs-table">
+          <thead><tr><th>Fichier</th><th>Contenu</th></tr></thead>
+          <tbody>
+            <tr><td><code>index.html</code></td><td>Structure du studio : canevas, écran de chargement, en-tête, sections.</td></tr>
+            <tr><td><code>main.js</code></td><td>Scène du studio : rendu, environnement lumineux, matériaux, préréglages de caméra, interaction souris et tactile.</td></tr>
+            <tr><td><code>styles.css</code></td><td>Styles communs (variables, en-tête, cartes, écran de chargement) et styles du studio, avec les variantes mobiles.</td></tr>
+            <tr><td><code>drive.html</code></td><td>Structure de la conduite : canevas, écran de départ, HUD, légende, contrôles tactiles.</td></tr>
+            <tr><td><code>drive.js</code></td><td>Simulateur : monde, route infinie, physique, caméras, HUD, son, qualité adaptative, entrées clavier et tactiles.</td></tr>
+            <tr><td><code>drive.css</code></td><td>Styles propres à la conduite.</td></tr>
+            <tr><td><code>docs.html</code>, <code>docs.css</code></td><td>Cette documentation.</td></tr>
+            <tr><td><code>assets/ferrari.glb</code></td><td>Modèle 3D compressé Draco (1,6 Mo).</td></tr>
+            <tr><td><code>assets/ferrari_ao.png</code></td><td>Ombre au sol pré-calculée, affichée sous la voiture.</td></tr>
+          </tbody>
+        </table>
+        <p>Dépendances externes, chargées à l'exécution :</p>
+        <ul>
+          <li><strong>Three.js 0.170</strong> et ses addons (<code>GLTFLoader</code>, <code>DRACOLoader</code>, <code>RoomEnvironment</code>) depuis jsDelivr ;</li>
+          <li>le décodeur <strong>Draco</strong> (WebAssembly) depuis le même CDN ;</li>
+          <li>la police <strong>Archivo</strong> depuis Google Fonts.</li>
+        </ul>
+      </section>
+
+      <section id="technique">
+        <h2>Fonctionnement technique</h2>
+        <h3>Rendu et matériaux</h3>
+        <p>
+          Les deux pages utilisent <code>WebGLRenderer</code> avec le tone mapping ACES Filmic. L'éclairage vient d'un
+          <code>RoomEnvironment</code> converti en carte d'environnement par <code>PMREMGenerator</code> : cela donne des reflets
+          réalistes sur la carrosserie sans télécharger d'image HDR. La peinture est un <code>MeshPhysicalMaterial</code> bleu nuit
+          avec vernis (<code>clearcoat</code>) ; les vitres sont semi-transparentes par opacité, ce qui est bien moins coûteux
+          que la transmission physique sur les puces graphiques intégrées.
+        </p>
+        <h3>Physique de la voiture</h3>
+        <p>
+          La simulation tourne à pas fixe (<code>FIXED_DT</code> = 1/120 s), indépendamment de la fréquence d'images : si le
+          navigateur ralentit, plusieurs pas sont exécutés par image, mais la voiture se comporte pareil. Le modèle est un « vélo » :
+          une vitesse longitudinale, un angle de braquage limité par la vitesse, une traînée, une boîte à 7 rapports déduite de
+          la vitesse. Le roulis et le tangage sont appliqués à un pivot séparé (<code>bodyPivot</code>) pour ne jamais perturber
+          la position réelle du véhicule.
+        </p>
+        <h3>Glissières</h3>
+        <p>
+          Les barrières latérale et centrale sont des murs. Au contact, la voiture perd une partie de sa vitesse une seule fois,
+          puis « racle » le mur : sa vitesse ne décroît que dans la mesure où elle pointe vers le mur, et son cap est ramené
+          progressivement parallèle à la route. On ne reste donc jamais coincé.
+        </p>
+        <h3>Route infinie</h3>
+        <p>
+          La chaussée, les marquages, les glissières, les lampadaires, les arbres, les collines et le pont sont des objets
+          répétés dont la position est recalée sur celle de la voiture à chaque image (modulo leur période). Les éléments
+          nombreux sont des <code>InstancedMesh</code> ; comme leurs instances bougent en permanence, le <em>frustum culling</em>
+          est désactivé sur eux, sinon la sphère englobante figée au premier rendu les ferait disparaître après quelques centaines de mètres.
+        </p>
+        <h3>Caméra</h3>
+        <p>
+          Plutôt que de lisser la position de la caméra dans le monde (ce qui la fait traîner derrière la voiture quand les
+          images se raréfient), on lisse ses paramètres d'orbite dans le repère de la voiture : angle, distance, hauteur,
+          champ de vision. La caméra est ensuite placée rigidement à partir de ces valeurs. Elle reste collée au véhicule tout
+          en gardant une sensation souple.
+        </p>
+        <h3>Entrées</h3>
+        <p>
+          La page détecte <code>(pointer: fine)</code> pour choisir le texte des consignes et afficher ou non les contrôles
+          tactiles. Le curseur de direction utilise les <code>PointerEvent</code> avec capture du pointeur, et
+          <code>touch-action: none</code> pour empêcher le navigateur de faire défiler ou de zoomer pendant qu'on le manipule.
+        </p>
+      </section>
+
+      <section id="performance">
+        <h2>Performance</h2>
+        <ul>
+          <li><strong>Qualité adaptative</strong> : la fréquence d'images est mesurée en continu ; si elle chute, la résolution de rendu et celle des ombres baissent d'un cran, et remontent quand la marge revient.</li>
+          <li><strong>Ombres</strong> : une seule lumière directionnelle avec une carte d'ombre de taille modeste, filtrage PCF simple.</li>
+          <li><strong>Préchargement</strong> : le <code>&lt;head&gt;</code> contient des balises <code>modulepreload</code> et <code>preload</code> pour Three.js, ses addons, le modèle et le décodeur Draco. Tout démarre en parallèle dès la lecture du HTML au lieu d'être découvert en cascade, ce qui divise le temps de première image par deux ou trois sur une connexion lente.</li>
+          <li><strong>Poids</strong> : environ 3,3 Mo au premier chargement (dont 1,6 Mo de modèle et 1,3 Mo de Three.js, servis compressés par les CDN). Les visites suivantes viennent du cache.</li>
+        </ul>
+      </section>
+
+      <section id="deploiement">
+        <h2>Déploiement</h2>
+        <p>
+          Le dépôt <a href="https://github.com/TheShellMaster/car-showcase">TheShellMaster/car-showcase</a> est publié par
+          <strong>GitHub Pages</strong> depuis la racine de la branche <code>main</code>. C'est un hébergement gratuit de fichiers
+          statiques, ce qui correspond exactement à ce projet.
+        </p>
+        <pre><code>git add -A
+git commit -m "Description du changement"
+git push</code></pre>
+        <p>Une minute plus tard, la nouvelle version est en ligne. Le statut de la publication est visible dans l'onglet <em>Actions</em> du dépôt.</p>
+        <h3>Et Vercel ?</h3>
+        <p>
+          Vercel héberge aussi des sites statiques et ajoute des fonctions serveur, des URL de prévisualisation par branche
+          et des statistiques. Pour ce projet sans backend, GitHub Pages suffit ; le passage à Vercel se fait en important le
+          dépôt GitHub, sans changer une ligne de code.
+        </p>
+        <h3>Cache</h3>
+        <p>
+          Les fichiers CSS et JS sont référencés avec un suffixe <code>?v=N</code>. Après une modification, incrémenter ce
+          numéro dans les pages HTML garantit que les navigateurs récupèrent la nouvelle version.
+        </p>
+      </section>
+
+      <section id="modifier">
+        <h2>Modifier le projet</h2>
+        <h3>Changer la couleur de la voiture</h3>
+        <p>Dans <code>main.js</code> et <code>drive.js</code>, la couleur de la peinture est définie sur <code>bodyMaterial.color</code>. La variable CSS <code>--paint</code> de <code>styles.css</code> sert aux accents de l'interface.</p>
+        <h3>Changer le modèle 3D</h3>
+        <p>
+          Remplacer <code>assets/ferrari.glb</code> par un autre fichier glTF. Les noms de matériaux utilisés pour recolorer la
+          carrosserie, les vitres et les détails sont recherchés dans le modèle ; il faut les adapter dans les deux scripts.
+          Compresser le fichier en Draco (<code>gltf-transform draco</code>) garde un temps de chargement raisonnable.
+        </p>
+        <h3>Ajuster les préréglages de caméra du studio</h3>
+        <p>L'objet <code>views</code> dans <code>main.js</code> associe chaque <code>data-view</code> à une position, une cible et un champ de vision. Les valeurs sont en mètres, dans le repère de la voiture.</p>
+        <h3>Régler le comportement de la voiture</h3>
+        <p>
+          Dans <code>drive.js</code>, l'objet <code>CAR</code> fixe la géométrie et les vitesses limites (<code>vmax</code>,
+          <code>reverseMax</code>), <code>ROAD</code> décrit la chaussée (largeur des voies, position des glissières) et le tableau
+          <code>GEARS_KMH</code> donne les seuils de passage des sept rapports. Accélération, freinage, traînée et braquage
+          sont appliqués dans la fonction <code>stepCar</code>, à chaque pas fixe.
+        </p>
+      </section>
+
+      <section id="depannage">
+        <h2>Dépannage</h2>
+        <dl class="docs-faq">
+          <dt>La page reste sur l'écran de chargement</dt>
+          <dd>
+            Le modèle (1,6 Mo) ou Three.js n'a pas fini d'arriver. Sur une connexion mobile lente, comptez 5 à 15 secondes au premier
+            chargement. Si la barre ne bouge pas du tout, un bloqueur de contenu ou un réseau d'entreprise empêche peut-être l'accès
+            à <code>cdn.jsdelivr.net</code> ou <code>fonts.googleapis.com</code>. Si une erreur se produit, elle s'affiche à la place du texte de chargement.
+          </dd>
+          <dt>Le site ne s'ouvre pas du tout sur le téléphone</dt>
+          <dd>
+            Vérifier que l'adresse est bien <code>https://theshellmaster.github.io/car-showcase/</code> (avec le <code>s</code> de
+            https et la barre finale). Essayer en navigation privée pour écarter un cache ou une extension, puis avec les données
+            mobiles au lieu du Wi‑Fi (ou l'inverse). Certains navigateurs « économiseurs de données » (mode Lite d'Opera, Chrome
+            avec économiseur activé) réécrivent les pages via un proxy et cassent les modules ES : les désactiver.
+          </dd>
+          <dt>Écran noir ou message « WebGL n'est pas disponible »</dt>
+          <dd>
+            Le navigateur n'a pas d'accélération graphique. Sur Android, utiliser Chrome ou Firefox à jour ; sur iOS, Safari 15
+            ou plus récent. Sur ordinateur, vérifier que l'accélération matérielle n'est pas désactivée dans les réglages du navigateur.
+          </dd>
+          <dt>Les images saccadent</dt>
+          <dd>
+            La qualité adaptative abaisse déjà la résolution automatiquement. Fermer les autres onglets lourds ; sur portable,
+            brancher le chargeur (les modes économie d'énergie plafonnent la puce graphique). La caméra « capot » est la moins coûteuse.
+          </dd>
+          <dt>Pas de son</dt>
+          <dd>
+            Les navigateurs exigent une interaction avant de jouer du son : appuyer sur une touche ou toucher l'écran. Le bouton en
+            haut à droite indique si le son est coupé. Sur iPhone, le commutateur latéral silencieux coupe aussi la Web Audio.
+          </dd>
+          <dt>Après une modification, l'ancienne version s'affiche encore</dt>
+          <dd>Incrémenter le suffixe <code>?v=N</code> des fichiers CSS et JS dans les pages HTML, ou recharger sans cache (<kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>R</kbd>).</dd>
+          <dt>En local, la page est blanche</dt>
+          <dd>Les modules ES ne se chargent pas depuis <code>file://</code>. Lancer un serveur HTTP (voir <a href="#acces">Accéder au site</a>).</dd>
+        </dl>
+      </section>
+
+      <section id="credits">
+        <h2>Crédits et licences</h2>
+        <ul>
+          <li>Modèle 3D : <em>Ferrari 458 Spider</em> par vicent091036, licence <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, distribué avec les exemples de Three.js.</li>
+          <li>Moteur de rendu : <a href="https://threejs.org/">Three.js</a>, licence MIT.</li>
+          <li>Compression : <a href="https://google.github.io/draco/">Draco</a>, licence Apache 2.0.</li>
+          <li>Police : <a href="https://fonts.google.com/specimen/Archivo">Archivo</a>, licence SIL Open Font.</li>
+          <li>Les caractéristiques techniques citées dans le studio sont celles de la Ferrari 458 Spider de série (2011 – 2015).</li>
+        </ul>
+        <p class="docs-foot">Code source : <a href="https://github.com/TheShellMaster/car-showcase">github.com/TheShellMaster/car-showcase</a></p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
