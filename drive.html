@@ -18,6 +18,16 @@
       }
     }
   </script>
+  <!-- Start every heavy download at once instead of discovering them one after another. -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js" />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/DRACOLoader.js" />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/environments/RoomEnvironment.js" />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/utils/BufferGeometryUtils.js" />
+  <link rel="preload" href="assets/ferrari.glb" as="fetch" crossorigin />
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js" as="fetch" crossorigin />
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/draco_decoder.wasm" as="fetch" crossorigin />
 </head>
 <body class="drive-page">
   <div class="stage stage-drive" aria-hidden="true">
