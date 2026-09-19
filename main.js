@@ -99,6 +99,7 @@ function setView(name) {
   cameraState.goalPos.fromArray(v.pos);
   cameraState.goalTarget.fromArray(v.target);
 }
+window.__setView = setView;
 
 const sections = document.querySelectorAll("[data-view]");
 const observer = new IntersectionObserver(
@@ -264,6 +265,11 @@ function animate() {
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
+
+window.__renderStill = function(){
+  try{ renderer.render(scene, camera); }catch(e){}
+  try{ return canvas.toDataURL("image/png"); }catch(e){ return ""; }
+};
 
 animate();
 }
