@@ -163,7 +163,7 @@ window.addEventListener("pointercancel", endSpin);
 // Load model
 
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/");
+dracoLoader.setDecoderPath("vendor/three/examples/jsm/libs/draco/gltf/");
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
 

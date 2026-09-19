@@ -450,7 +450,7 @@ const detailsMaterial = new THREE.MeshStandardMaterial({ color: 0x9da3ac, metaln
 const glassMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdfe8f2, metalness: 0.2, roughness: 0.05, transparent: true, opacity: 0.35 });
 
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/");
+dracoLoader.setDecoderPath("vendor/three/examples/jsm/libs/draco/gltf/");
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
 
