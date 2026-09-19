@@ -169,8 +169,9 @@ gltfLoader.setDRACOLoader(dracoLoader);
 
 const shadowTexture = new THREE.TextureLoader().load("assets/ferrari_ao.png");
 
+var _modelUrl = location.search.indexOf("model=original") !== -1 ? "assets/ferrari.original.glb" : "assets/ferrari.glb";
 gltfLoader.load(
-  "assets/ferrari.glb",
+  _modelUrl,
   (gltf) => {
     const car = gltf.scene.children[0];
 
