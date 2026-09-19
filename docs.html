@@ -50,19 +50,19 @@
 
       <section id="presentation">
         <h2>Présentation</h2>
-        <p>Le site se compose de trois pages statiques :</p>
+        <p>Le site se compose de quatre pages statiques :</p>
         <table class="docs-table">
           <thead><tr><th>Page</th><th>Rôle</th></tr></thead>
           <tbody>
             <tr><td><a href="index.html"><code>index.html</code></a></td><td>Le studio. La voiture réagit au pointeur, et chaque section défilée déclenche un mouvement de caméra vers un détail : aérodynamique, jantes, moteur, habitacle, vue de dessus, fiche technique.</td></tr>
             <tr><td><a href="drive.html"><code>drive.html</code></a></td><td>La conduite libre. Une autoroute infinie à trois voies, une physique simplifiée mais crédible, trois caméras, un compteur et un son moteur synthétisé.</td></tr>
             <tr><td><code>docs.html</code></td><td>Cette page.</td></tr>
+            <tr><td><a href="status.html"><code>status.html</code></a></td><td>Diagnostic autonome (sans CDN) : teste en une seconde le réseau, le CDN, WebGL et la compatibilité du navigateur.</td></tr>
           </tbody>
         </table>
         <p>
           Aucun serveur applicatif, aucune base de données, aucun <code>npm install</code> : des fichiers
-          HTML, CSS et JavaScript servis tels quels. Three.js est chargé depuis le CDN jsDelivr grâce à un
-          <em>import map</em>.
+          HTML, CSS et JavaScript servis tels quels. Three.js et le décodeur Draco sont servis depuis <code>vendor/three/</code> (même origine) ; seule la police Archivo vient de Google Fonts.
         </p>
       </section>
 
@@ -159,15 +159,16 @@ python3 -m http.server 8765</code></pre>
             <tr><td><code>drive.js</code></td><td>Simulateur : monde, route infinie, physique, caméras, HUD, son, qualité adaptative, entrées clavier et tactiles.</td></tr>
             <tr><td><code>drive.css</code></td><td>Styles propres à la conduite.</td></tr>
             <tr><td><code>docs.html</code>, <code>docs.css</code></td><td>Cette documentation.</td></tr>
-            <tr><td><code>assets/ferrari.glb</code></td><td>Modèle 3D compressé Draco (1,6 Mo).</td></tr>
+            <tr><td><code>assets/ferrari.glb</code></td><td>Modèle 3D compressé Draco (759 Ko, 1,6 Mo avant optimisation ; original conservé en <code>assets/ferrari.original.glb</code> hors dépôt).</td></tr>
             <tr><td><code>assets/ferrari_ao.png</code></td><td>Ombre au sol pré-calculée, affichée sous la voiture.</td></tr>
+            <tr><td><code>vendor/three/</code></td><td>Three.js 0.170 et ses addons (<code>GLTFLoader</code>, <code>DRACOLoader</code>, <code>RoomEnvironment</code>, <code>BufferGeometryUtils</code>) et décodeur Draco (<code>draco_wasm_wrapper.js</code> + <code>draco_decoder.wasm</code>) servis depuis le dépôt — plus de dépendance CDN.</td></tr>
+            <tr><td><code>status.html</code></td><td>Page de diagnostic autonome, sans dépendance externe, pour tester réseau, CDN et WebGL depuis le téléphone.</td></tr>
           </tbody>
         </table>
-        <p>Dépendances externes, chargées à l'exécution :</p>
+        <p>Dépendances :</p>
         <ul>
-          <li><strong>Three.js 0.170</strong> et ses addons (<code>GLTFLoader</code>, <code>DRACOLoader</code>, <code>RoomEnvironment</code>) depuis jsDelivr ;</li>
-          <li>le décodeur <strong>Draco</strong> (WebAssembly) depuis le même CDN ;</li>
-          <li>la police <strong>Archivo</strong> depuis Google Fonts.</li>
+          <li><strong>Three.js 0.170</strong> et le décodeur <strong>Draco</strong> sont servis depuis <code>vendor/three/</code> (même origine <code>github.io</code>) — le site ne dépend plus de <code>cdn.jsdelivr.net</code>.</li>
+          <li>La police <strong>Archivo</strong> est chargée depuis Google Fonts avec <code>display=swap</code> et un repli <code>system-ui</code> ; son échec ne bloque jamais l'affichage.</li>
         </ul>
       </section>
 
@@ -222,8 +223,8 @@ python3 -m http.server 8765</code></pre>
         <ul>
           <li><strong>Qualité adaptative</strong> : la fréquence d'images est mesurée en continu ; si elle chute, la résolution de rendu et celle des ombres baissent d'un cran, et remontent quand la marge revient.</li>
           <li><strong>Ombres</strong> : une seule lumière directionnelle avec une carte d'ombre de taille modeste, filtrage PCF simple.</li>
-          <li><strong>Préchargement</strong> : le <code>&lt;head&gt;</code> contient des balises <code>modulepreload</code> et <code>preload</code> pour Three.js, ses addons, le modèle et le décodeur Draco. Tout démarre en parallèle dès la lecture du HTML au lieu d'être découvert en cascade, ce qui divise le temps de première image par deux ou trois sur une connexion lente.</li>
-          <li><strong>Poids</strong> : environ 3,3 Mo au premier chargement (dont 1,6 Mo de modèle et 1,3 Mo de Three.js, servis compressés par les CDN). Les visites suivantes viennent du cache.</li>
+          <li><strong>Préchargement</strong> : le <code>&lt;head&gt;</code> contient des balises <code>modulepreload</code> et <code>preload</code> pour Three.js, ses addons, le modèle et le décodeur Draco (tous en même origine). Tout démarre en parallèle dès la lecture du HTML, divisant le temps de première image par deux ou trois sur connexion lente, sans DNS tiers.</li>
+          <li><strong>Poids</strong> : environ 2,5 Mo au premier chargement (dont 0,76 Mo de modèle et 1,3 Mo de Three.js + Draco, servis depuis <code>github.io</code>), contre 3,3 Mo avant optimisation (1,6 Mo de modèle). Les visites suivantes viennent du cache. Le modèle a été allégé par <code>weld</code> + <code>simplify</code> (ratio 0,5, erreur 0,001) + recompression Draco (position 10 bits, normale 7 bits).</li>
         </ul>
       </section>
 
@@ -278,9 +279,8 @@ git push</code></pre>
         <dl class="docs-faq">
           <dt>La page reste sur l'écran de chargement</dt>
           <dd>
-            Le modèle (1,6 Mo) ou Three.js n'a pas fini d'arriver. Sur une connexion mobile lente, comptez 5 à 15 secondes au premier
-            chargement. Si la barre ne bouge pas du tout, un bloqueur de contenu ou un réseau d'entreprise empêche peut-être l'accès
-            à <code>cdn.jsdelivr.net</code> ou <code>fonts.googleapis.com</code>. Si une erreur se produit, elle s'affiche à la place du texte de chargement.
+            Le modèle (759 Ko) ou Three.js n'a pas fini d'arriver. Sur une connexion mobile lente, comptez 3 à 10 secondes au premier
+            chargement. Depuis la mise en local de Three.js et Draco, un blocage de <code>cdn.jsdelivr.net</code> ne peut plus bloquer le studio — seule la police Google Fonts reste externe, avec un repli système. Si la barre ne bouge pas, vérifier avec la <a href="status.html">page de diagnostic</a> (test CDN et WebGL en 1 s) et regarder si une erreur s'affiche à la place du texte de chargement.
           </dd>
           <dt>Le site ne s'ouvre pas du tout sur le téléphone</dt>
           <dd>
