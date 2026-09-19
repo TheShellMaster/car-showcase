@@ -19,6 +19,9 @@
   h1{margin:.2em 0 .3em; font-size:clamp(1.8rem,5vw,2.6rem); line-height:1.05; letter-spacing:-.02em}
   .lead{color:var(--soft); margin:0 0 1.6rem; font-size:1.05rem}
   .card{background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  .verdict{padding:1rem; background:var(--paper); border-bottom:1px solid var(--line); font-weight:700; color:var(--accent)}
+  .verdict.fail{color:var(--fail)}
+  .verdict.ok{color:var(--ok)}
   .row{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.85rem 1rem; border-top:1px solid var(--line)}
   .row:first-child{border-top:0}
   .row-head{flex:1}
@@ -34,6 +37,8 @@
   .btn:hover{background:var(--accent); border-color:var(--accent)}
   .btn.secondary{background:#fff; color:var(--ink)}
   .btn.secondary:hover{background:var(--paper)}
+  .btn-link{display:inline-flex; align-items:center; text-decoration:none; border:1px solid var(--line); background:#fff; color:var(--ink); padding:.65rem 1rem; border-radius:8px; font-weight:600; font-size:.92rem}
+  .btn-link:hover{background:var(--paper)}
   pre{margin:1rem 0 0; padding:1rem; background:#15181d; color:#eef0f3; border-radius:8px; overflow:auto; font-size:.82rem; line-height:1.5; white-space:pre-wrap; word-break:break-word}
   .foot{margin-top:1.2rem; color:var(--soft); font-size:.84rem}
   code{background:rgba(21,24,29,.07); padding:.12em .34em; border-radius:4px; font-size:.9em}
@@ -55,182 +60,363 @@
   <div class="actions">
     <button class="btn" id="copy" type="button">Copier le rapport</button>
     <button class="btn secondary" id="rerun" type="button">Relancer les tests</button>
-    <a class="btn secondary" href="index.html" style="display:inline-flex; align-items:center; text-decoration:none; border:1px solid var(--line)">Retour au studio</a>
+    <a class="btn-link" href="index.html">Retour au studio</a>
   </div>
 
   <p class="meta" id="meta"></p>
-  <pre id="report" hidden></pre>
+  <pre id="report"></pre>
   <p class="foot">Astuce : en cas de blocage, collez le rapport copié dans la conversation avec le développeur. Il contient tout ce qu'il faut sans capture d'écran.</p>
 </div>
 
 <script>
+"use strict";
 (function(){
-  var $tests = document.getElementById('tests');
-  var $meta = document.getElementById('meta');
-  var $report = document.getElementById('report');
-  var $copy = document.getElementById('copy');
-  var $rerun = document.getElementById('rerun');
+  var $tests = document.getElementById("tests");
+  var $meta = document.getElementById("meta");
+  var $report = document.getElementById("report");
+  var $copy = document.getElementById("copy");
+  var $rerun = document.getElementById("rerun");
 
-  var results = [];
+  var results = {};
+  var verdictEl = null;
 
-  function row(title, detail){
-    var el = document.createElement('div');
-    el.className = 'row';
-    el.innerHTML = '<div class="row-head"><div class="row-title">'+title+'</div><div class="row-detail">'+ (detail||'') +'</div></div><div class="badge wait">…</div>';
-    $tests.appendChild(el);
-    return {
-      set: function(ok, badge, extra){
-        var b = el.querySelector('.badge');
-        b.textContent = badge;
-        b.className = 'badge ' + (ok===true?'ok':ok===false?'fail':'wait');
-        if(extra) el.querySelector('.row-detail').textContent = extra;
-      },
-      el: el
-    };
+  function fmtMs(ms){ if(ms < 1000) return Math.round(ms) + " ms"; return (ms/1000).toFixed(2) + " s"; }
+
+  function createVerdict(){
+    var d = document.createElement("div");
+    d.className = "verdict";
+    d.id = "verdict";
+    d.textContent = "Verdict : calcul en cours…";
+    return d;
   }
 
-  function fmtMs(ms){ return ms < 1000 ? Math.round(ms)+' ms' : (ms/1000).toFixed(2)+' s'; }
+  function createRow(title, detail){
+    var el = document.createElement("div");
+    el.className = "row";
+    var head = document.createElement("div");
+    head.className = "row-head";
+    var t = document.createElement("div");
+    t.className = "row-title";
+    t.textContent = title;
+    var det = document.createElement("div");
+    det.className = "row-detail";
+    det.textContent = detail || "";
+    head.appendChild(t);
+    head.appendChild(det);
+    var badge = document.createElement("div");
+    badge.className = "badge wait";
+    badge.textContent = "…";
+    el.appendChild(head);
+    el.appendChild(badge);
+    return {el: el, det: det, badge: badge, set: function(ok, label, extra){
+      badge.textContent = label;
+      badge.className = "badge " + (ok === true ? "ok" : ok === false ? "fail" : "wait");
+      if(extra) det.textContent = extra;
+    }};
+  }
 
-  async function timedFetch(url, opts){
-    var t0 = performance.now();
-    try{
-      var r = await fetch(url, opts);
-      var t1 = performance.now();
-      return {ok: r.ok || r.type === 'opaque', status: r.status, type: r.type, ms: t1-t0, resp: r};
-    }catch(e){
-      var t1 = performance.now();
-      return {ok: false, error: e.message||String(e), ms: t1-t0};
+  function updateReport(){
+    var lines = [];
+    lines.push("— Rapport diagnostic 458 Spider —");
+    lines.push($meta.textContent);
+    lines.push("");
+    var keys = ["1","2","3","4","5","6","7","8","9","10","verdict"];
+    for(var i=0;i<keys.length;i++){
+      var k = keys[i];
+      if(results[k]) lines.push(results[k]);
     }
+    $report.textContent = lines.join("\n");
   }
 
-  async function run(){
-    $tests.innerHTML = '';
-    results = [];
-    $report.hidden = true;
-    $meta.textContent = 'Heure : ' + new Date().toLocaleString('fr-FR') + ' — URL : ' + location.href;
+  function computeVerdict(){
+    var webglOk = results["7"] && results["7"].indexOf("OK") !== -1;
+    var importOk = results["5"] && results["5"].indexOf("Oui") !== -1;
+    var modulesOk = results["6"] && results["6"].indexOf("Oui") !== -1;
+    var cdnFail = results["3"] && results["3"].indexOf("\u00c9CHEC") !== -1;
+    var debitCdn = results["10"] || "";
+    var debitVal = -1;
+    var m = debitCdn.match(/(\d+)\s*Ko\/s/);
+    if(m) debitVal = parseInt(m[1],10);
+    var text = "";
+    var cls = "";
+    if(!webglOk || !importOk || !modulesOk){
+      text = "Verdict : Navigateur incompatible (WebGL / import maps)";
+      cls = "fail";
+    } else if(cdnFail || (debitVal !== -1 && debitVal < 100)){
+      text = "Verdict : CDN injoignable ou trop lent : le studio ne peut pas charger Three.js";
+      cls = "fail";
+    } else {
+      text = "Verdict : Tout est joignable : le blocage vient du chargement 3D, voir D\u00e9pannage";
+      cls = "ok";
+    }
+    if(verdictEl){
+      verdictEl.textContent = text;
+      verdictEl.className = "verdict " + cls;
+    }
+    results["verdict"] = text;
+    updateReport();
+  }
+
+  function xhrTest(url, range, timeoutMs, onDone){
+    var xhr = new XMLHttpRequest();
+    var t0 = Date.now();
+    var done = false;
+    function finish(ok, status, bytes, extra){
+      if(done) return;
+      done = true;
+      var ms = Date.now() - t0;
+      onDone(ok, status, bytes, ms, extra);
+    }
+    xhr.open("GET", url, true);
+    if(range) xhr.setRequestHeader("Range", range);
+    xhr.responseType = "arraybuffer";
+    xhr.timeout = timeoutMs;
+    xhr.onload = function(){
+      var s = xhr.status;
+      var ok = (s >= 200 && s < 300);
+      var bytes = 0;
+      try{
+        if(xhr.response && xhr.response.byteLength) bytes = xhr.response.byteLength;
+        else if(xhr.responseText) bytes = xhr.responseText.length;
+      } catch(e){}
+      var extra = "";
+      if(s === 206) extra = "206 Partial";
+      else if(s === 200 && range) extra = "200 (Range ignor\u00e9)";
+      finish(ok, s, bytes, extra);
+    };
+    xhr.onerror = function(){ finish(false, 0, 0, "erreur r\u00e9seau"); };
+    xhr.ontimeout = function(){ finish(false, 0, 0, "d\u00e9lai d\u00e9pass\u00e9 (8 s)"); };
+    try{ xhr.send(null); } catch(e){ finish(false, 0, 0, e.message || String(e)); }
+  }
+
+  function run(){
+    $tests.innerHTML = "";
+    results = {};
+    $meta.textContent = "Heure : " + new Date().toLocaleString("fr-FR") + " \u2014 URL : " + location.href;
+
+    verdictEl = createVerdict();
+    $tests.appendChild(verdictEl);
 
     // 1 HTML servi
-    var r1 = row('1 — GitHub Pages (HTML)', location.href);
-    r1.set(true, '✔ OK', 'Page servie à ' + new Date().toLocaleTimeString('fr-FR') + ' — si vous lisez ceci, la page est arrivée.');
-    results.push('1 HTML: OK — ' + location.href + ' à ' + new Date().toISOString());
+    var r1 = createRow("1 \u2014 GitHub Pages (HTML)", location.href);
+    $tests.appendChild(r1.el);
+    r1.set(true, "\u2714 OK", "Page servie \u00e0 " + new Date().toLocaleTimeString("fr-FR") + " \u2014 si vous lisez ceci, la page est arriv\u00e9e.");
+    results["1"] = "1 HTML: OK \u2014 " + location.href + " \u00e0 " + new Date().toISOString();
 
-    // 2 Même origine
-    var r2 = row('2 — Fichier local (même origine)', 'GET assets/ferrari_ao.png — 21 Ko');
-    var a = await timedFetch('assets/ferrari_ao.png', {cache:'no-store'});
-    if(a.ok){
-      r2.set(true, '✔ '+fmtMs(a.ms), 'Joignable en ' + fmtMs(a.ms) + ' — status ' + a.status);
-      results.push('2 Même origine (ferrari_ao.png): OK ' + fmtMs(a.ms) + ' status ' + a.status);
-    }else{
-      r2.set(false, '✘ Échec', (a.error||('status '+a.status)) + ' en ' + fmtMs(a.ms));
-      results.push('2 Même origine: ÉCHEC ' + (a.error||a.status) + ' ' + fmtMs(a.ms));
-    }
-
-    // 3 CDN jsDelivr
-    var r3 = row('3 — CDN jsDelivr', 'GET https://cdn.jsdelivr.net/npm/three@0.170.0/package.json');
-    var b = await timedFetch('https://cdn.jsdelivr.net/npm/three@0.170.0/package.json', {cache:'no-store'});
-    if(b.ok){
-      r3.set(true, '✔ '+fmtMs(b.ms), 'CDN joignable en ' + fmtMs(b.ms) + ' — status ' + b.status);
-      results.push('3 CDN jsDelivr: OK ' + fmtMs(b.ms) + ' status ' + b.status);
-    }else{
-      r3.set(false, '✘ Injoignable', (b.error||('status '+b.status)) + ' en ' + fmtMs(b.ms) + ' — le studio restera bloqué sur le chargement si le CDN est filtré par l’opérateur, un DNS ou un bloqueur.');
-      results.push('3 CDN jsDelivr: ÉCHEC ' + (b.error||b.status) + ' ' + fmtMs(b.ms));
-    }
-
-    // 4 Google Fonts
-    var r4 = row('4 — Google Fonts', 'GET https://fonts.googleapis.com/css2?family=Archivo (no-cors)');
-    var c = await timedFetch('https://fonts.googleapis.com/css2?family=Archivo', {mode:'no-cors', cache:'no-store'});
-    if(c.ok || c.type === 'opaque'){
-      r4.set(true, '✔ '+fmtMs(c.ms), 'Joignable en ' + fmtMs(c.ms) + (c.type==='opaque'?' — réponse opaque (normal en no-cors)':''));
-      results.push('4 Google Fonts: OK ' + fmtMs(c.ms) + ' type ' + c.type);
-    }else{
-      // no-cors ne doit pas échouer sauf panne réseau ; on considère l'échec comme bloquant mais non critique (police a un repli système)
-      r4.set(null, '—', (c.error||'injoignable') + ' en ' + fmtMs(c.ms) + ' — non bloquant : le site a un repli système.');
-      results.push('4 Google Fonts: ÉCHEC/' + (c.error||c.status) + ' ' + fmtMs(c.ms) + ' (non bloquant)');
-    }
-
-    // 5 import maps
-    var r5 = row('5 — Support import maps', 'HTMLScriptElement.supports("importmap")');
+    // 5 import maps synchrone
+    var r5 = createRow("5 \u2014 Support import maps", "HTMLScriptElement.supports(\"importmap\")");
+    $tests.appendChild(r5.el);
     var imp = false;
-    try{ imp = HTMLScriptElement.supports ? HTMLScriptElement.supports('importmap') : false; }catch(e){ imp = false; }
-    r5.set(imp, imp?'✔ Oui':'✘ Non', imp ? 'Le navigateur comprend les import maps (requis pour le studio).' : 'Navigateur trop ancien — le studio ne peut pas se charger. Mettre à jour le navigateur.');
-    results.push('5 import maps: ' + (imp?'Oui':'Non'));
+    try{ imp = window.HTMLScriptElement && HTMLScriptElement.supports ? HTMLScriptElement.supports("importmap") : false; } catch(e){ imp = false; }
+    r5.set(imp, imp ? "\u2714 Oui" : "\u2718 Non", imp ? "Le navigateur comprend les import maps (requis)." : "Navigateur trop ancien \u2014 le studio ne peut pas se charger. Mettre \u00e0 jour.");
+    results["5"] = "5 import maps: " + (imp ? "Oui" : "Non");
 
-    // 6 modules ES
-    var r6 = row('6 — Support modules ES', '"noModule" in HTMLScriptElement.prototype');
-    var mod = 'noModule' in HTMLScriptElement.prototype;
-    // mod === true signifie que le navigateur supporte les modules (il connaît l'attribut nomodule)
-    r6.set(mod, mod?'✔ Oui':'✘ Non', mod ? 'Modules ES supportés.' : 'Modules ES non supportés — navigateur trop ancien.');
-    results.push('6 modules ES: ' + (mod?'Oui':'Non'));
+    // 6 modules ES synchrone
+    var r6 = createRow("6 \u2014 Support modules ES", "\"noModule\" in HTMLScriptElement.prototype");
+    $tests.appendChild(r6.el);
+    var mod = "noModule" in HTMLScriptElement.prototype;
+    r6.set(mod, mod ? "\u2714 Oui" : "\u2718 Non", mod ? "Modules ES support\u00e9s." : "Modules ES non support\u00e9s \u2014 navigateur trop ancien.");
+    results["6"] = "6 modules ES: " + (mod ? "Oui" : "Non");
 
-    // 7 WebGL
-    var r7 = row('7 — WebGL', 'canvas getContext("webgl2") puis "webgl"');
-    var canvas = document.createElement('canvas');
-    var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    // 7 WebGL synchrone
+    var r7 = createRow("7 \u2014 WebGL", "canvas getContext(\"webgl2\") puis \"webgl\"");
+    $tests.appendChild(r7.el);
+    var canvas = document.createElement("canvas");
+    var gl = null;
+    try{ gl = canvas.getContext("webgl2") || canvas.getContext("webgl"); } catch(e){ gl = null; }
     if(!gl){
-      r7.set(false, '✘ Absent', 'WebGL indisponible — le studio ne peut pas s’afficher. Activer l’accélération matérielle ou changer de navigateur (Chrome/Firefox à jour, Safari 15+).');
-      results.push('7 WebGL: ABSENT');
-    }else{
-      var ver = gl instanceof WebGL2RenderingContext ? 'webgl2' : 'webgl';
-      var dbg = gl.getExtension('WEBGL_debug_renderer_info');
-      var vendor = '', renderer = '';
+      r7.set(false, "\u2718 Absent", "WebGL indisponible \u2014 le studio ne peut pas s\u2019afficher. Activer l\u2019acc\u00e9l\u00e9ration mat\u00e9rielle ou changer de navigateur (Chrome/Firefox \u00e0 jour, Safari 15+).");
+      results["7"] = "7 WebGL: ABSENT";
+    } else {
+      var ver = (gl instanceof WebGL2RenderingContext) ? "webgl2" : "webgl";
+      var vendor = "";
+      var renderer = "";
       try{
+        var dbg = gl.getExtension("WEBGL_debug_renderer_info");
         if(dbg){
           vendor = gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL);
           renderer = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
         }
-      }catch(e){}
-      var extra = ver + (renderer ? ' — ' + renderer + (vendor?' ('+vendor+')':'' ) : '');
-      r7.set(true, '✔ '+ver, extra);
-      results.push('7 WebGL: OK ' + extra);
+      } catch(e){}
+      var extra = ver + (renderer ? " \u2014 " + renderer + (vendor ? " (" + vendor + ")" : "") : "");
+      r7.set(true, "\u2714 " + ver, extra);
+      results["7"] = "7 WebGL: OK " + extra;
     }
 
-    // 8 Infos appareil
-    var r8 = row('8 — Appareil / réseau', 'navigator.userAgent, connection, écran');
+    // 8 Appareil synchrone
+    var r8 = createRow("8 \u2014 Appareil / r\u00e9seau", "navigator.userAgent, connection, \u00e9cran");
+    $tests.appendChild(r8.el);
     var ua = navigator.userAgent;
-    var conn = (navigator.connection && navigator.connection.effectiveType) ? navigator.connection.effectiveType : 'inconnu';
+    var conn = "inconnu";
+    try{ if(navigator.connection && navigator.connection.effectiveType) conn = navigator.connection.effectiveType; } catch(e){}
     var dpr = window.devicePixelRatio || 1;
-    var mem = navigator.deviceMemory ? navigator.deviceMemory + ' Go' : 'inconnu';
-    var cores = navigator.hardwareConcurrency || 'inconnu';
-    var wh = window.innerWidth + '×' + window.innerHeight + ' (dpr ' + dpr + ')';
-    r8.set(null, '—', ua + ' — réseau : ' + conn + ' — écran : ' + wh + ' — mémoire : ' + mem + ' — cœurs : ' + cores);
-    results.push('8 userAgent: ' + ua);
-    results.push('8 connection.effectiveType: ' + conn);
-    results.push('8 devicePixelRatio: ' + dpr);
-    results.push('8 écran: ' + wh);
-    results.push('8 deviceMemory: ' + mem);
-    results.push('8 hardwareConcurrency: ' + cores);
-    results.push('8 URL: ' + location.href);
-    results.push('8 heure: ' + new Date().toISOString());
+    var mem = "inconnu";
+    try{ if(navigator.deviceMemory) mem = navigator.deviceMemory + " Go"; } catch(e){}
+    var cores = "inconnu";
+    try{ if(navigator.hardwareConcurrency) cores = String(navigator.hardwareConcurrency); } catch(e){}
+    var wh = window.innerWidth + "\u00d7" + window.innerHeight + " (dpr " + dpr + ")";
+    r8.set(null, "\u2014", ua + " \u2014 r\u00e9seau : " + conn + " \u2014 \u00e9cran : " + wh + " \u2014 m\u00e9moire : " + mem + " \u2014 c\u0153urs : " + cores);
+    results["8"] = "8 userAgent: " + ua;
+    results["8"] += "\n8 connection.effectiveType: " + conn;
+    results["8"] += "\n8 devicePixelRatio: " + dpr;
+    results["8"] += "\n8 \u00e9cran: " + wh;
+    results["8"] += "\n8 deviceMemory: " + mem;
+    results["8"] += "\n8 hardwareConcurrency: " + cores;
+    results["8"] += "\n8 URL: " + location.href;
+    results["8"] += "\n8 heure: " + new Date().toISOString();
 
-    // Rapport texte
-    var txt = '— Rapport diagnostic 458 Spider —\n'
-      + $meta.textContent + '\n\n'
-      + results.join('\n') + '\n';
-    $report.textContent = txt;
-    $report.hidden = false;
+    updateReport();
+    computeVerdict();
+
+    // Réseau en parallèle avec timeout 8s
+    var r2 = createRow("2 \u2014 Fichier local (m\u00eame origine)", "GET assets/ferrari_ao.png \u2014 21 Ko");
+    $tests.appendChild(r2.el);
+    results["2"] = "2 M\u00eame origine (ferrari_ao.png): en cours…";
+    updateReport();
+    xhrTest("assets/ferrari_ao.png", null, 8000, function(ok, status, bytes, ms, extra){
+      if(ok){
+        r2.set(true, "\u2714 " + fmtMs(ms), "Joignable en " + fmtMs(ms) + " \u2014 status " + status + (extra ? " " + extra : ""));
+        results["2"] = "2 M\u00eame origine (ferrari_ao.png): OK " + fmtMs(ms) + " status " + status + " " + extra;
+      } else {
+        r2.set(false, "\u2718 \u00c9chec", (extra || ("status " + status)) + " en " + fmtMs(ms));
+        results["2"] = "2 M\u00eame origine: \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
+      }
+      updateReport(); computeVerdict();
+    });
+
+    var r3 = createRow("3 \u2014 CDN jsDelivr", "GET https://cdn.jsdelivr.net/npm/three@0.170.0/package.json");
+    $tests.appendChild(r3.el);
+    results["3"] = "3 CDN jsDelivr: en cours…";
+    updateReport();
+    xhrTest("https://cdn.jsdelivr.net/npm/three@0.170.0/package.json", null, 8000, function(ok, status, bytes, ms, extra){
+      if(ok){
+        r3.set(true, "\u2714 " + fmtMs(ms), "CDN joignable en " + fmtMs(ms) + " \u2014 status " + status);
+        results["3"] = "3 CDN jsDelivr: OK " + fmtMs(ms) + " status " + status;
+      } else {
+        r3.set(false, "\u2718 Injoignable", (extra || ("status " + status)) + " en " + fmtMs(ms) + " \u2014 le studio restera bloqu\u00e9 si le CDN est filtr\u00e9.");
+        results["3"] = "3 CDN jsDelivr: \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
+      }
+      updateReport(); computeVerdict();
+    });
+
+    var r4 = createRow("4 \u2014 Google Fonts", "GET https://fonts.googleapis.com/css2?family=Archivo (no-cors, non bloquant)");
+    $tests.appendChild(r4.el);
+    results["4"] = "4 Google Fonts: en cours…";
+    updateReport();
+    // Fonts: XHR d'abord, puis fetch no-cors en repli
+    xhrTest("https://fonts.googleapis.com/css2?family=Archivo", null, 8000, function(ok, status, bytes, ms, extra){
+      if(ok){
+        r4.set(true, "\u2714 " + fmtMs(ms), "Joignable en " + fmtMs(ms) + " \u2014 non bloquant (repli syst\u00e8me).");
+        results["4"] = "4 Google Fonts: OK " + fmtMs(ms) + " type xhr status " + status + " (non bloquant)";
+        updateReport(); computeVerdict();
+      } else {
+        // repli fetch no-cors
+        var t0 = Date.now();
+        try{
+          fetch("https://fonts.googleapis.com/css2?family=Archivo", {mode: "no-cors", cache: "no-store"}).then(function(r){
+            var ms2 = Date.now() - t0;
+            var typ = r ? r.type : "opaque";
+            r4.set(true, "\u2714 " + fmtMs(ms2), "Joignable en " + fmtMs(ms2) + " \u2014 r\u00e9ponse " + typ + " (normal en no-cors, non bloquant).");
+            results["4"] = "4 Google Fonts: OK " + fmtMs(ms2) + " type " + typ + " (non bloquant)";
+            updateReport(); computeVerdict();
+          }, function(e){
+            var ms2 = Date.now() - t0;
+            r4.set(null, "\u2014", (e && e.message ? e.message : "injoignable") + " en " + fmtMs(ms2) + " \u2014 non bloquant : le site a un repli syst\u00e8me.");
+            results["4"] = "4 Google Fonts: \u00c9CHEC " + (e && e.message ? e.message : "error") + " " + fmtMs(ms2) + " (non bloquant)";
+            updateReport(); computeVerdict();
+          });
+        } catch(e){
+          r4.set(null, "\u2014", (extra || "injoignable") + " en " + fmtMs(ms) + " \u2014 non bloquant : le site a un repli syst\u00e8me.");
+          results["4"] = "4 Google Fonts: \u00c9CHEC " + (extra || "error") + " " + fmtMs(ms) + " (non bloquant)";
+          updateReport(); computeVerdict();
+        }
+      }
+    });
+
+    var r9 = createRow("9 \u2014 D\u00e9bit m\u00eame origine", "GET assets/ferrari.glb Range: bytes=0-262143 (256 Ko)");
+    $tests.appendChild(r9.el);
+    results["9"] = "9 D\u00e9bit m\u00eame origine: en cours…";
+    updateReport();
+    xhrTest("assets/ferrari.glb", "bytes=0-262143", 8000, function(ok, status, bytes, ms, extra){
+      if(ok && ms > 0){
+        var kb = bytes / 1024;
+        var kbs = Math.round(kb / (ms/1000));
+        var est = Math.round((776.684 / kbs) * 10) / 10;
+        var note = extra ? " " + extra : "";
+        r9.set(true, kbs + " Ko/s", "T\u00e9l\u00e9charg\u00e9 " + Math.round(kb) + " Ko en " + fmtMs(ms) + " \u2014 " + kbs + " Ko/s" + note + " \u2014 mod\u00e8le complet \u2248 " + est + " s");
+        results["9"] = "9 D\u00e9bit m\u00eame origine: " + kbs + " Ko/s (" + Math.round(kb) + " Ko en " + fmtMs(ms) + ")" + note + " est. mod\u00e8le " + est + "s";
+      } else {
+        r9.set(false, "\u2718 \u00c9chec", (extra || ("status " + status)) + " en " + fmtMs(ms));
+        results["9"] = "9 D\u00e9bit m\u00eame origine: \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
+      }
+      updateReport(); computeVerdict();
+    });
+
+    var r10 = createRow("10 \u2014 D\u00e9bit CDN", "GET https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js Range: bytes=0-262143 (256 Ko)");
+    $tests.appendChild(r10.el);
+    results["10"] = "10 D\u00e9bit CDN: en cours…";
+    updateReport();
+    xhrTest("https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "bytes=0-262143", 8000, function(ok, status, bytes, ms, extra){
+      if(ok && ms > 0){
+        var kb = bytes / 1024;
+        var kbs = Math.round(kb / (ms/1000));
+        var est = Math.round((1314.681 / kbs) * 10) / 10;
+        var note = extra ? " " + extra : "";
+        r10.set(true, kbs + " Ko/s", "T\u00e9l\u00e9charg\u00e9 " + Math.round(kb) + " Ko en " + fmtMs(ms) + " \u2014 " + kbs + " Ko/s" + note + " \u2014 Three.js \u2248 " + est + " s");
+        results["10"] = "10 D\u00e9bit CDN: " + kbs + " Ko/s (" + Math.round(kb) + " Ko en " + fmtMs(ms) + ")" + note + " est. Three.js " + est + "s";
+      } else {
+        r10.set(false, "\u2718 \u00c9chec", (extra || ("status " + status)) + " en " + fmtMs(ms) + " \u2014 CDN trop lent ou injoignable");
+        results["10"] = "10 D\u00e9bit CDN: \u00c9CHEC " + (extra || status) + " " + fmtMs(ms);
+      }
+      updateReport(); computeVerdict();
+    });
   }
 
-  $rerun.addEventListener('click', run);
-  $copy.addEventListener('click', async function(){
-    var txt = document.getElementById('report').textContent;
+  function copyReport(){
+    var txt = $report.textContent;
     try{
-      await navigator.clipboard.writeText(txt);
-      var old = $copy.textContent;
-      $copy.textContent = 'Copié ✓';
-      setTimeout(function(){ $copy.textContent = old; }, 1800);
-    }catch(e){
-      // fallback
-      var ta = document.createElement('textarea');
-      ta.value = txt;
-      document.body.appendChild(ta);
-      ta.select();
-      try{ document.execCommand('copy'); }catch(_){}
-      document.body.removeChild(ta);
-      $copy.textContent = 'Copié ✓';
-      setTimeout(function(){ $copy.textContent = 'Copier le rapport'; }, 1800);
-    }
-  });
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){
+          var old = $copy.textContent;
+          $copy.textContent = "Copi\u00e9 \u2713";
+          setTimeout(function(){ $copy.textContent = old; }, 1800);
+        }, function(){ fallbackCopy(txt); });
+        return;
+      }
+    } catch(e){}
+    fallbackCopy(txt);
+  }
 
+  function fallbackCopy(txt){
+    var ta = document.createElement("textarea");
+    ta.value = txt;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try{ ok = document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+    if(ok){
+      var old = $copy.textContent;
+      $copy.textContent = "Copi\u00e9 \u2713";
+      setTimeout(function(){ $copy.textContent = old; }, 1800);
+    } else {
+      $report.style.display = "block";
+      var sel = window.getSelection();
+      if(sel){
+        var range = document.createRange();
+        range.selectNodeContents($report);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      $copy.textContent = "S\u00e9lectionnez et copiez le texte ci-dessus";
+      setTimeout(function(){ $copy.textContent = "Copier le rapport"; }, 3000);
+    }
+  }
+
+  $rerun.onclick = run;
+  $copy.onclick = copyReport;
   run();
 })();
 </script>
