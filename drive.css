@@ -154,6 +154,44 @@ body.driving .hud {
 
 /* Legend */
 
+.hud-car {
+  grid-column: 1 / -1;
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.start-car {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Mini-carte du quartier : en haut à droite sous l'en-tête. */
+.minimap {
+  position: fixed;
+  right: var(--gutter);
+  top: 5.5rem;
+  z-index: 3;
+  width: 150px;
+  height: 150px;
+  border: 1px solid var(--line);
+  background: rgba(238, 240, 243, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 600ms ease;
+  pointer-events: none;
+}
+
+body.driving .minimap {
+  opacity: 1;
+}
+
 .legend {
   position: fixed;
   left: var(--gutter);
@@ -380,5 +418,11 @@ kbd {
 
   .hud-gear-value {
     font-size: 1.5rem;
+  }
+
+  .minimap {
+    top: 4.25rem;
+    width: 96px;
+    height: 96px;
   }
 }
