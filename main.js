@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { CARS, carFromLocation, rememberCar } from "./cars.js?v=1";
-import { loadVehicle } from "./vehicles.js?v=1";
+import { loadVehicle } from "./vehicles.js?v=3";
 
 const canvas = document.getElementById("scene");
 const loaderBar = document.getElementById("loader-bar");

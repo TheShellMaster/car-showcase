@@ -92,6 +92,8 @@ function dressQuaternius(root, spec) {
 // Kenney : un seul mesh "body" texturé. On sépare les triangles dont la couleur d'atlas est la
 // peinture d'origine (la couleur dominante par surface) pour leur donner notre matériau de peinture.
 const colormapPixels = new Map();
+// L'atlas dessiné sur un canvas est dans le sens des UV glTF (origine en haut) : pas de retournement.
+const FLIP_ATLAS_V = false;
 function pixelsOf(texture) {
   const img = texture.image;
   const key = img.src || img;
@@ -101,21 +103,40 @@ function pixelsOf(texture) {
     c.height = img.height;
     const ctx = c.getContext("2d");
     ctx.drawImage(img, 0, 0);
-    colormapPixels.set(key, { data: ctx.getImageData(0, 0, c.width, c.height).data, w: c.width, h: c.height, flipY: texture.flipY });
+    // GLTFLoader décode les images en ImageBitmap déjà retournées verticalement (puis flipY = false) ;
+    // avec un HTMLImageElement (repli TextureLoader) l'image est dans le sens glTF, origine en haut.
+    const flipped = FLIP_ATLAS_V;
+    colormapPixels.set(key, { data: ctx.getImageData(0, 0, c.width, c.height).data, w: c.width, h: c.height, flipped });
   }
   return colormapPixels.get(key);
 }
 
 function sampleAtlas(px, u, v) {
   const x = Math.min(px.w - 1, Math.max(0, Math.floor((u % 1 + 1) % 1 * px.w)));
-  const vv = px.flipY ? 1 - v : v;
+  const vv = px.flipped ? 1 - v : v;
   const y = Math.min(px.h - 1, Math.max(0, Math.floor((vv % 1 + 1) % 1 * px.h)));
   const i = (y * px.w + x) * 4;
   return [px.data[i], px.data[i + 1], px.data[i + 2]];
 }
 
+// Teinte (0–360) et saturation (0–1) d'une couleur RVB, pour regrouper les dégradés d'une même case.
+function hueSat([r, g, b]) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const d = max - min;
+  const sat = max === 0 ? 0 : d / max;
+  let h = 0;
+  if (d > 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+  }
+  return { h, sat, lum: max / 255 };
+}
+
 function splitKenneyBody(mesh, spec) {
-  const geo = mesh.geometry.index ? mesh.geometry : mesh.geometry.toNonIndexed();
+  // Copie : la géométrie d'origine est partagée par toutes les instances du même modèle.
+  const geo = mesh.geometry.index ? mesh.geometry.clone() : mesh.geometry.toNonIndexed();
   const baseMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
   if (!baseMat.map || !baseMat.map.image) return;
   const px = pixelsOf(baseMat.map);
@@ -131,28 +152,27 @@ function splitKenneyBody(mesh, spec) {
     const [i0, i1, i2] = [index[i], index[i + 1], index[i + 2]];
     const u = (uv.getX(i0) + uv.getX(i1) + uv.getX(i2)) / 3;
     const v = (uv.getY(i0) + uv.getY(i1) + uv.getY(i2)) / 3;
-    const rgb = sampleAtlas(px, u, v);
-    // Quantifie grossièrement pour regrouper les dégradés d'une même case d'atlas.
-    const key = (rgb[0] >> 4) + "," + (rgb[1] >> 4) + "," + (rgb[2] >> 4);
+    const { h, sat, lum } = hueSat(sampleAtlas(px, u, v));
+    // Regroupe par teinte (cases de 20°) ; les gris (vitres, pneus, chromes) sont hors jeu.
+    const key = sat > 0.25 && lum > 0.15 ? Math.round(h / 20) : -1;
     a.fromBufferAttribute(pos, i0);
     b.fromBufferAttribute(pos, i1);
     c.fromBufferAttribute(pos, i2);
     const area = b.sub(a).cross(c.sub(a)).length() * 0.5;
     tris.push({ i0, i1, i2, key });
-    areaByColor.set(key, (areaByColor.get(key) || 0) + area);
+    if (key >= 0) areaByColor.set(key, (areaByColor.get(key) || 0) + area);
   }
-  // La peinture est la couleur qui couvre la plus grande surface, hors gris/noirs (vitres, pneus).
+  // La peinture est la teinte qui couvre la plus grande surface.
   let paintKey = null, best = -1;
   areaByColor.forEach((area, key) => {
-    const [r, g, bb] = key.split(",").map(Number);
-    const sat = Math.max(r, g, bb) - Math.min(r, g, bb);
-    if (sat >= 1 && area > best) {
+    if (area > best) {
       best = area;
       paintKey = key;
     }
   });
+  const near = (k) => k >= 0 && paintKey !== null && Math.min(Math.abs(k - paintKey), 18 - Math.abs(k - paintKey)) <= 1;
   const paintIdx = [], restIdx = [];
-  for (const t of tris) (t.key === paintKey ? paintIdx : restIdx).push(t.i0, t.i1, t.i2);
+  for (const t of tris) (near(t.key) ? paintIdx : restIdx).push(t.i0, t.i1, t.i2);
   geo.setIndex([...paintIdx, ...restIdx]);
   geo.clearGroups();
   geo.addGroup(0, paintIdx.length, 0);
