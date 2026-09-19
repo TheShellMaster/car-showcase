@@ -501,7 +501,7 @@ gltfLoader.load(
   },
   (xhr) => {
     if (xhr.total) {
-      const p = Math.round((xhr.loaded / xhr.total) * 100);
+      const p = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
       loaderBar.style.width = p + "%";
       loaderText.textContent = "Chargement de la voiture " + p + " %";
     }
