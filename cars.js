@@ -41,7 +41,7 @@ export const CARS = [
     tagline: "Trente ans de best-seller français, cinquième génération.",
     lead: "La citadine qui a défini la catégorie en 1990. Aujourd'hui hybride E-Tech, avec une finition qui regarde une gamme au-dessus.",
     paint: "#e0521c",
-    vehicle: { src: K + "hatchback-sports.glb", kind: "kenney", length: 4.05 },
+    vehicle: { src: K + "hatchback-sports.glb", kind: "kenney", length: 4.05, width: 1.8 },
     specs: { moteur: "4 cyl. 1,6 l hybride E-Tech", puissance: "145 ch", couple: "205 Nm", zeroCent: "9,3 s", vmax: "180 km/h", poids: "1 300 kg", transmission: "Traction, multimode" },
     sections: [
       { view: "aero", title: "Dessin", text: "Le capot est nervuré, les optiques en C sont devenues la signature de la marque. Un dessin tendu qui vieillit bien.", facts: [["Cx", "0,32"], ["Longueur", "4,05 m"]] },
@@ -107,7 +107,7 @@ export const CARS = [
     tagline: "Le dernier cinq cylindres au monde, dans une compacte.",
     lead: "Un moteur qui n'existe nulle part ailleurs, un différentiel arrière qui répartit le couple roue par roue, et un mode dérapage homologué. La RS 3 est une anomalie assumée.",
     paint: "#7c8087",
-    vehicle: { src: K + "sedan-sports.glb", kind: "kenney", length: 4.39 },
+    vehicle: { src: K + "sedan-sports.glb", kind: "kenney", length: 4.39, width: 1.85 },
     specs: { moteur: "5 cyl. 2,5 l TFSI", puissance: "400 ch", couple: "500 Nm", zeroCent: "3,8 s", vmax: "290 km/h", poids: "1 570 kg", transmission: "quattro, S tronic 7" },
     sections: [
       { view: "aero", title: "Face RS", text: "Calandre en nid d'abeilles plus large que celle de l'A3, prises d'air fonctionnelles pour les freins, becquet. Tout ce qui est noir est utile.", facts: [["Voie avant", "+33 mm"], ["Longueur", "4,39 m"]] },
@@ -129,7 +129,7 @@ export const CARS = [
     tagline: "Deux tonnes trois, et le temps d'une supercar au sprint.",
     lead: "Un V8 biturbo de 625 ch dans un SUV de sept places possibles. Le X5 M est une contradiction que BMW a résolue à coups de suspension active et de différentiels pilotés.",
     paint: "#101215",
-    vehicle: { src: K + "suv-luxury.glb", kind: "kenney", length: 4.94 },
+    vehicle: { src: K + "suv-luxury.glb", kind: "kenney", length: 4.94, width: 2.02 },
     specs: { moteur: "V8 4,4 l biturbo hybride léger", puissance: "625 ch", couple: "750 Nm", zeroCent: "3,9 s", vmax: "290 km/h", poids: "2 385 kg", transmission: "M xDrive, auto 8" },
     sections: [
       { view: "aero", title: "Présence", text: "Les haricots éclairés, les ailes élargies, les quatre sorties d'échappement : rien n'est discret, et c'est le but. Le X5 M occupe la route.", facts: [["Largeur", "2,02 m"], ["Longueur", "4,94 m"]] },
@@ -195,7 +195,8 @@ export const CARS = [
     tagline: "Un V12, trois moteurs électriques, 1 015 chevaux.",
     lead: "Lamborghini a refusé d'abandonner le V12 atmosphérique. La Revuelto l'entoure de trois moteurs électriques et d'une coque monobloc en carbone. Le résultat est la voiture de série la plus rapide jamais produite par la marque.",
     paint: "#5cc33b",
-    vehicle: { src: K + "race-future.glb", kind: "kenney", length: 4.95 },
+    vehicle: { src: Q + "q-sport-b.glb", kind: "quaternius", length: 4.95 },
+    accent: "#1c1f24",
     specs: { moteur: "V12 6,5 l atmosphérique + 3 électriques", puissance: "1 015 ch", couple: "725 Nm (V12)", zeroCent: "2,5 s", vmax: "350 km/h", poids: "1 772 kg", transmission: "Intégrale, DCT 8" },
     sections: [
       { view: "aero", title: "Forme en Y", text: "Chaque prise d'air, chaque phare, chaque sortie d'échappement dessine un Y. Le capot avant abrite le moteur électrique et un coffre ; la voiture est sculptée par l'air qui la traverse.", facts: [["Appui", "+66 % vs Aventador"], ["Longueur", "4,95 m"]] },

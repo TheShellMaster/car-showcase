@@ -235,7 +235,9 @@ export async function loadVehicle(spec) {
   // Normalisation : longueur réelle, avant vers -Z, roues au sol.
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3());
-  const scale = spec.length / size.z;
+  // Longueur réelle, mais sans dépasser la largeur réelle : les modèles Kenney sont trapus.
+  let scale = spec.length / size.z;
+  if (spec.width) scale = Math.min(scale, spec.width / size.x);
   const inner = new THREE.Group();
   inner.add(model);
   model.scale.setScalar(scale);

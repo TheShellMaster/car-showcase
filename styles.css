@@ -553,12 +553,8 @@ body.ready .loader {
     border-radius: 50%;
   }
 
-  .hero {
-    padding-bottom: 5.5rem;
-  }
-
   .foot {
-    padding-bottom: 5.5rem;
+    padding-bottom: 7rem;
   }
 
   .top {
@@ -587,7 +583,7 @@ body.ready .loader {
     align-items: flex-start;
     justify-content: flex-end;
     gap: 1.5rem;
-    padding-bottom: 2rem;
+    padding-bottom: 7rem; /* laisse la place au sélecteur de voitures */
   }
 
   .hero-copy {
@@ -600,7 +596,20 @@ body.ready .loader {
   }
 
   .hero-title {
-    font-size: clamp(4rem, 22vw, 6rem);
+    font-size: clamp(2.5rem, 12.5vw, 4rem);
+    overflow-wrap: anywhere;
+  }
+
+  .hero-lead {
+    font-size: 0.9375rem;
+  }
+
+  .hero-hint {
+    padding: 0.35rem 0.7rem;
+    background: rgba(238, 240, 243, 0.8);
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   .detail,

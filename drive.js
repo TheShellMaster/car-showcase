@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=1";
-import { loadVehicle, animateWheels } from "./vehicles.js?v=3";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=3";
+import { loadVehicle, animateWheels } from "./vehicles.js?v=4";
 import { buildCity, updateLOD, isDrivable, tileOf, tileAt, tileX, tileZ, road, T, TILE, SIDE, ROADS, LANE, HALF_ROAD, PERIOD } from "./city.js?v=7";
 
 // ---------------------------------------------------------------------------
@@ -128,7 +128,7 @@ async function boot() {
 
   // Départ : au milieu de la rue centrale ouest-est, voie de droite, face à l'est.
   const startJ = road(2), startI = road(0) + 2;
-  const car = { x: tileX(startI), z: tileZ(startJ) + LANE, yaw: -Math.PI / 2, v: 0, accel: 0, steer: 0, hitFlash: 0, dist: 0 };
+  const car = { x: tileX(startI), z: tileZ(startJ) + LANE, yaw: -Math.PI / 2, v: 0, accel: 0, steer: 0, hitFlash: 0, dist: 0, touchingAI: false };
 
   function resetCar() {
     // Remet la voiture sur la voie la plus proche, dans le sens du cap actuel.
@@ -160,8 +160,8 @@ async function boot() {
   const trafficSpecs = CARS.filter((c) => c.id !== carData.id);
   const extra = [
     { vehicle: { src: "assets/cars/q-taxi.glb", kind: "quaternius", length: 4.4 }, paint: "#f2c319" },
-    { vehicle: { src: "assets/cars/kenney/van.glb", kind: "kenney", length: 4.9 }, paint: "#d8dbe0" },
-    { vehicle: { src: "assets/cars/kenney/delivery.glb", kind: "kenney", length: 5.4 }, paint: "#2f6f4e" },
+    { vehicle: { src: "assets/cars/kenney/van.glb", kind: "kenney", length: 4.9, width: 1.95 }, paint: "#d8dbe0" },
+    { vehicle: { src: "assets/cars/kenney/delivery.glb", kind: "kenney", length: 5.4, width: 2.1 }, paint: "#2f6f4e" },
     { vehicle: { src: "assets/cars/q-police.glb", kind: "quaternius", length: 4.6 }, paint: "#e8ecf0" },
   ];
   const palette = ["#d8dbe0", "#2b2e33", "#8b9099", "#9c1f28", "#1f3a6d", "#e0521c", "#c9b79c", "#3b5a3a", "#e8ecf0", "#5a3a7a"];
@@ -534,20 +534,28 @@ async function boot() {
       car.v *= Math.abs(car.v) > 3 ? 0.35 : 0.8;
     }
 
-    // Collisions avec le trafic : simple répulsion.
+    // Collisions avec le trafic : répulsion des deux véhicules, perte de vitesse une seule fois par
+    // contact (sinon une voiture arrêtée contre nous nous immobiliserait définitivement).
+    let touchingAny = false;
     for (const ai of traffic) {
       const dx = car.x - ai.x, dz = car.z - ai.z;
       const d = Math.hypot(dx, dz);
       const minD = (CAR.halfLength + ai.length / 2) * 0.8;
       if (d < minD && d > 0.001) {
+        touchingAny = true;
         const push = (minD - d) * 0.5;
         car.x += (dx / d) * push;
         car.z += (dz / d) * push;
-        if (Math.abs(car.v) > 2) car.hitFlash = 1;
-        car.v *= 0.5;
-        ai.speed = 0;
+        ai.x -= (dx / d) * push * 0.5;
+        ai.z -= (dz / d) * push * 0.5;
+        if (!car.touchingAI) {
+          if (Math.abs(car.v) > 2) car.hitFlash = 1;
+          car.v *= 0.5;
+          ai.speed *= 0.3;
+        }
       }
     }
+    car.touchingAI = touchingAny;
     car.hitFlash = Math.max(0, car.hitFlash - dt * 3);
     car.dist += car.v * dt;
 

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=1";
-import { loadVehicle } from "./vehicles.js?v=3";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=3";
+import { loadVehicle } from "./vehicles.js?v=4";
 
 const canvas = document.getElementById("scene");
 const loaderBar = document.getElementById("loader-bar");
@@ -68,7 +68,7 @@ function boot() {
   // Caméras (en mètres, pour une voiture de 4,5 m ; mises à l'échelle par voiture)
 
   const VIEWS = {
-    hero: { pos: [4.3, 1.25, -4.4], target: [0, 0.35, 0] },
+    hero: { pos: [6.0, 1.6, -5.9], target: [0.6, 0.15, 0.45] },
     aero: { pos: [-2.2, 0.55, -4.1], target: [0.5, 0.45, -1.7] },
     wheel: { pos: [2.5, 0.6, -2.6], target: [0.8, 0.35, -1.3] },
     rear: { pos: [-3.2, 1.05, 3.9], target: [-0.4, 0.6, 0.75] },
@@ -330,8 +330,16 @@ function boot() {
     }
     const portrait = Math.max(0, 1.3 - camera.aspect);
     tmpTarget.copy(cameraState.target);
-    tmpTarget.y -= portrait * 0.7 * viewScale;
-    camera.position.copy(cameraState.pos).sub(cameraState.target).multiplyScalar(1 + portrait * 1.5).add(cameraState.target);
+    tmpTarget.y -= portrait * 0.5 * viewScale;
+    camera.position.copy(cameraState.pos).sub(cameraState.target).multiplyScalar(1 + portrait * 2.3).add(cameraState.target);
+    // En portrait la carte de texte occupe le bas de l'écran : on décale le cadrage pour que la
+    // voiture reste dans le tiers supérieur, sans changer l'angle de vue.
+    if (portrait > 0) {
+      const W = renderer.domElement.width, H = renderer.domElement.height;
+      camera.setViewOffset(W, H, 0, Math.round(portrait * H * 0.28), W, H);
+    } else if (camera.view && camera.view.enabled) {
+      camera.clearViewOffset();
+    }
     camera.position.y += -mouse.y * 0.35;
     tmpTarget.y += -mouse.y * 0.08;
     camera.lookAt(tmpTarget);
