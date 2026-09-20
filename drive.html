@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Conduire — 458 Spider</title>
-  <meta name="description" content="Prenez le volant de la 458 Spider sur une autoroute libre. Flèches ou ZQSD pour conduire, souris pour regarder autour." />
+  <title>Conduire en ville — La Collection</title>
+  <meta name="description" content="Conduisez la voiture de votre choix dans un quartier entier : rues, carrefours à feux, trafic. Clavier ou tactile." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=3" />
-  <link rel="stylesheet" href="drive.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="drive.css?v=4" />
   <script type="importmap">
     {
       "imports": {
@@ -21,12 +21,11 @@
   <!-- Start every heavy download at once instead of discovering them one after another. -->
   <link rel="modulepreload" href="vendor/three/build/three.module.js" />
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js" />
-  <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/DRACOLoader.js" />
   <link rel="modulepreload" href="vendor/three/examples/jsm/environments/RoomEnvironment.js" />
   <link rel="modulepreload" href="vendor/three/examples/jsm/utils/BufferGeometryUtils.js" />
-  <link rel="preload" href="assets/ferrari.glb" as="fetch" crossorigin />
-  <link rel="preload" href="vendor/three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js" as="fetch" crossorigin />
-  <link rel="preload" href="vendor/three/examples/jsm/libs/draco/gltf/draco_decoder.wasm" as="fetch" crossorigin />
+  <link rel="modulepreload" href="vehicles.js?v=16" />
+  <link rel="modulepreload" href="cars.js?v=10" />
+  <link rel="modulepreload" href="city.js?v=7" />
 </head>
 <body class="drive-page">
   <div class="stage stage-drive" aria-hidden="true">
@@ -35,13 +34,13 @@
 
   <div class="loader" id="loader">
     <div class="loader-track"><div class="loader-bar" id="loader-bar"></div></div>
-    <p class="loader-text" id="loader-text">Préparation de l'autoroute</p>
+    <p class="loader-text" id="loader-text">Préparation du quartier</p>
   </div>
 
   <header class="top">
-    <a class="brand" href="index.html">Studio</a>
+    <a class="brand" href="index.html" data-back-studio>La Collection</a>
     <nav class="top-nav">
-      <a href="index.html#fiche">Fiche technique</a>
+      <a href="index.html" data-back-studio>Changer de voiture</a>
       <a href="docs.html">Documentation</a>
       <button class="top-button" id="sound-toggle" type="button" aria-pressed="false">Son coupé</button>
       <button class="top-button" id="camera-toggle" type="button">Caméra : poursuite</button>
@@ -51,12 +50,13 @@
   <div class="start" id="start">
     <div class="start-inner">
       <h1 class="start-title">Prenez<br />le volant</h1>
+      <p class="start-car"><span data-car-name></span></p>
       <p class="start-lead" data-fine>
-        Autoroute libre, trois voies, aucun trafic. Accélérez avec la flèche haut,
-        braquez avec les flèches gauche et droite. La souris déplace le regard autour de la voiture.
+        Un quartier entier, ses carrefours à feux et son trafic. Accélérez avec la flèche haut,
+        braquez avec les flèches gauche et droite, respectez les feux… ou pas. La souris déplace le regard.
       </p>
       <p class="start-lead" data-coarse hidden>
-        Autoroute libre, trois voies, aucun trafic. Le curseur à gauche braque,
+        Un quartier entier, ses carrefours à feux et son trafic. Le curseur à gauche braque,
         les boutons à droite accélèrent et freinent. Glissez sur l'écran pour regarder autour.
       </p>
       <p class="start-cta" id="start-cta" data-fine>Appuyez sur une touche ou cliquez pour partir</p>
@@ -65,6 +65,7 @@
   </div>
 
   <div class="hud" id="hud" aria-live="off">
+    <p class="hud-car" id="hud-car"></p>
     <div class="hud-speed">
       <span class="hud-speed-value" id="hud-speed">0</span>
       <span class="hud-speed-unit">km/h</span>
@@ -78,12 +79,16 @@
     </div>
   </div>
 
+  <canvas class="minimap" id="minimap" width="180" height="180" aria-hidden="true"></canvas>
+
   <aside class="legend" id="legend">
     <dl>
       <div><dt><kbd>↑</kbd> <kbd>Z</kbd></dt><dd>Accélérer</dd></div>
       <div><dt><kbd>↓</kbd> <kbd>S</kbd></dt><dd>Freiner, reculer</dd></div>
       <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Braquer</dd></div>
       <div><dt><kbd>Espace</kbd></dt><dd>Frein à main</dd></div>
+      <div><dt><kbd>E</kbd> <kbd>T</kbd></dt><dd>Clignotants gauche / droite</dd></div>
+      <div><dt><kbd>L</kbd></dt><dd>Phares</dd></div>
       <div><dt><kbd>C</kbd></dt><dd>Changer de caméra</dd></div>
       <div><dt><kbd>R</kbd></dt><dd>Remettre sur la voie</dd></div>
     </dl>
@@ -100,47 +105,7 @@
     </div>
   </div>
 
-  <script>
-"use strict";
-(function(){
-  var c = document.createElement("canvas");
-  var gl = null;
-  try{ gl = c.getContext("webgl2", {failIfMajorPerformanceCaveat:false}) || c.getContext("webgl", {failIfMajorPerformanceCaveat:false}) || c.getContext("experimental-webgl", {failIfMajorPerformanceCaveat:false}); }catch(e){}
-  if(gl) return;
-  var b = document.body;
-  if(b) b.className += (b.className ? " " : "") + "no-webgl";
-  var loader = document.getElementById("loader");
-  if(!loader) return;
-  var ua = navigator.userAgent || "";
-  var isChrome = /Chrome|Chromium|Edg|OPR|Brave/.test(ua) && !/Firefox/.test(ua);
-  var isFirefox = /Firefox/.test(ua);
-  var isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/Chromium/.test(ua);
-  var steps = "";
-  if(isChrome){
-    steps = "<ol><li>Ouvrez <code>chrome://settings/system</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"chrome://settings/system\">Copier</button> \u2192 \u00ab Utiliser l\u2019acc\u00e9l\u00e9ration graphique si disponible \u00bb \u2192 Activ\u00e9 \u2192 <strong>Relancer</strong></li><li>Si rien ne change : <code>chrome://flags/#ignore-gpu-blocklist</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"chrome://flags/#ignore-gpu-blocklist\">Copier</button> \u2192 Enabled \u2192 Relancer</li><li>V\u00e9rifiez <code>chrome://gpu</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"chrome://gpu\">Copier</button> (WebGL doit \u00eatre \u00ab Hardware accelerated \u00bb)</li></ol>";
-  } else if(isFirefox){
-    steps = "<ol><li>Ouvrez <code>about:config</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"about:config\">Copier</button> \u2192 <code>webgl.disabled</code> = false, <code>webgl.force-enabled</code> = true</li><li>V\u00e9rifiez <code>about:support</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"about:support\">Copier</button> \u2192 WebGL doit \u00eatre activ\u00e9</li></ol>";
-  } else if(isSafari){
-    steps = "<ol><li>Safari \u2192 R\u00e9glages \u2192 Avanc\u00e9 \u2192 cocher \u00ab Afficher le menu D\u00e9veloppement \u00bb</li><li>Menu D\u00e9veloppement \u2192 Fonctionnalit\u00e9s exp\u00e9rimentales \u2192 WebGL activ\u00e9</li><li>Sinon mettez \u00e0 jour iOS/macOS (Safari 15+ requis)</li></ol>";
-  } else {
-    steps = "<p>Installez <a href=\"https://www.google.com/chrome/\">Chrome</a> ou <a href=\"https://www.mozilla.org/firefox/\">Firefox</a> \u00e0 jour.</p>";
-  }
-  var html = "<div class=\"nogl\"><h2>Ce navigateur ne peut pas afficher la 3D</h2><p>L\u2019acc\u00e9l\u00e9ration graphique (WebGL) est d\u00e9sactiv\u00e9e. Le site fonctionne, mais votre navigateur refuse de dessiner la voiture.</p>" + steps + "<p><a href=\"status.html\">Voir le diagnostic complet</a> \u2014 <a href=\"docs.html#depannage\">D\u00e9pannage</a></p></div>";
-  loader.innerHTML = html;
-  var btns = loader.querySelectorAll(".nogl-copy");
-  for(var i=0;i<btns.length;i++){
-    (function(btn){
-      btn.onclick = function(){
-        var txt = btn.getAttribute("data-copy");
-        try{
-          if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt); btn.textContent="Copi\u00e9"; setTimeout(function(){btn.textContent="Copier";},1500); return; }
-        }catch(e){}
-        var ta=document.createElement("textarea"); ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); btn.textContent="Copi\u00e9"; setTimeout(function(){btn.textContent="Copier";},1500);}catch(e){} document.body.removeChild(ta);
-      };
-    })(btns[i]);
-  }
-})();
-  </script>
-  <script type="module" src="drive.js?v=8"></script>
+  <script src="nogl.js?v=1"></script>
+  <script type="module" src="drive.js?v=30"></script>
 </body>
 </html>

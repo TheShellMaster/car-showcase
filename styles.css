@@ -390,9 +390,173 @@ body.ready .loader {
   margin: 0;
 }
 
+/* Sélecteur de voitures : colonne à droite sur grand écran, bandeau en bas sur mobile. */
+
+.rail {
+  position: fixed;
+  right: var(--gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-height: calc(100vh - 12rem);
+}
+
+.rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.rail-list::-webkit-scrollbar {
+  display: none;
+}
+
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 0;
+  border-right: 2px solid var(--line);
+  text-align: right;
+  cursor: pointer;
+  transition: color 200ms, border-color 200ms, background 200ms;
+}
+
+.rail-item:hover {
+  color: var(--ink);
+}
+
+.rail-list .current .rail-item {
+  color: var(--ink);
+  border-right-color: var(--ink);
+  background: linear-gradient(90deg, transparent, rgba(238, 240, 243, 0.85));
+}
+
+.rail-rank {
+  order: 3;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.rail-swatch {
+  order: 2;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--paint);
+  box-shadow: inset 0 0 0 1px rgba(21, 24, 29, 0.15);
+}
+
+.rail-name {
+  order: 1;
+  white-space: nowrap;
+}
+
+.rail-name strong {
+  font-weight: 600;
+}
+
+.rail-arrow {
+  display: none;
+}
+
+.rail.loading .rail-list .current .rail-item {
+  animation: railPulse 900ms ease-in-out infinite;
+}
+
+@keyframes railPulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
 /* Responsive */
 
 @media (max-width: 720px) {
+  .rail {
+    right: 0;
+    left: 0;
+    top: auto;
+    bottom: 0;
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    max-height: none;
+    padding: 0.4rem var(--gutter) calc(0.4rem + env(safe-area-inset-bottom));
+    background: linear-gradient(0deg, rgba(238, 240, 243, 0.96), rgba(238, 240, 243, 0.7));
+  }
+
+  .rail-list {
+    flex: 1;
+    flex-direction: row;
+    gap: 0.25rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .rail-item {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.4rem 0.6rem;
+    border-right: 0;
+    border-bottom: 2px solid transparent;
+    text-align: center;
+    scroll-snap-align: center;
+  }
+
+  .rail-list .current .rail-item {
+    border-right: 0;
+    border-bottom-color: var(--ink);
+    background: none;
+  }
+
+  .rail-rank {
+    display: none;
+  }
+
+  .rail-name {
+    order: 2;
+    font-size: 0.75rem;
+  }
+
+  .rail-swatch {
+    order: 1;
+  }
+
+  .rail-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+  }
+
+  .foot {
+    padding-bottom: 7rem;
+  }
+
   .top {
     padding: 1rem var(--gutter) 1.75rem;
   }
@@ -419,7 +583,7 @@ body.ready .loader {
     align-items: flex-start;
     justify-content: flex-end;
     gap: 1.5rem;
-    padding-bottom: 2rem;
+    padding-bottom: 7rem; /* laisse la place au sélecteur de voitures */
   }
 
   .hero-copy {
@@ -432,7 +596,20 @@ body.ready .loader {
   }
 
   .hero-title {
-    font-size: clamp(4rem, 22vw, 6rem);
+    font-size: clamp(2.5rem, 12.5vw, 4rem);
+    overflow-wrap: anywhere;
+  }
+
+  .hero-lead {
+    font-size: 0.9375rem;
+  }
+
+  .hero-hint {
+    padding: 0.35rem 0.7rem;
+    background: rgba(238, 240, 243, 0.8);
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   .detail,

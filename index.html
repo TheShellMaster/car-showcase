@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>458 Spider — Studio</title>
-  <meta name="description" content="Étude interactive de la Ferrari 458 Spider. Déplacez la souris pour faire pivoter la voiture, faites défiler pour découvrir chaque détail." />
+  <title>La Collection — dix-sept voitures, de la Sandero à la Chiron</title>
+  <meta name="description" content="Dix-sept voitures en 3D interactive, de la plus accessible à la plus prestigieuse. Faites pivoter chaque modèle, découvrez ses détails, puis prenez le volant en ville." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=7" />
   <script type="importmap">
     {
       "imports": {
@@ -17,15 +17,12 @@
       }
     }
   </script>
-  <!-- Start every heavy download at once instead of discovering them one after another. -->
   <link rel="modulepreload" href="vendor/three/build/three.module.js" />
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js" />
-  <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/DRACOLoader.js" />
   <link rel="modulepreload" href="vendor/three/examples/jsm/environments/RoomEnvironment.js" />
   <link rel="modulepreload" href="vendor/three/examples/jsm/utils/BufferGeometryUtils.js" />
-  <link rel="preload" href="assets/ferrari.glb" as="fetch" crossorigin />
-  <link rel="preload" href="vendor/three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js" as="fetch" crossorigin />
-  <link rel="preload" href="vendor/three/examples/jsm/libs/draco/gltf/draco_decoder.wasm" as="fetch" crossorigin />
+  <link rel="modulepreload" href="vehicles.js?v=16" />
+  <link rel="modulepreload" href="cars.js?v=10" />
 </head>
 <body>
   <div class="stage" aria-hidden="true">
@@ -38,27 +35,31 @@
   </div>
 
   <header class="top">
-    <a class="brand" href="#">Studio</a>
+    <a class="brand" href="#hero">La Collection</a>
     <nav class="top-nav">
-      <a href="#aero">Aérodynamique</a>
-      <a href="#chassis">Châssis</a>
-      <a href="#moteur">Moteur</a>
+      <a href="#detail-0" id="nav-detail-0">Design</a>
+      <a href="#detail-1" id="nav-detail-1">Châssis</a>
+      <a href="#detail-2" id="nav-detail-2">Moteur</a>
       <a href="#fiche">Fiche technique</a>
       <a href="docs.html">Documentation</a>
-      <a class="top-nav-drive" href="drive.html">Conduire</a>
+      <a class="top-nav-drive" id="nav-drive" href="drive.html">Conduire</a>
     </nav>
   </header>
 
-  <main class="content">
+  <!-- Sélecteur de voiture : de la plus accessible à la plus prestigieuse. -->
+  <nav class="rail" id="rail" aria-label="Choisir une voiture">
+    <button class="rail-arrow" id="rail-prev" type="button" aria-label="Voiture précédente">←</button>
+    <ol class="rail-list" id="rail-list"></ol>
+    <button class="rail-arrow" id="rail-next" type="button" aria-label="Voiture suivante">→</button>
+  </nav>
+
+  <main class="content" id="content">
     <section class="view hero" data-view="hero" id="hero">
       <div class="hero-copy">
-        <p class="hero-kicker">Ferrari, Maranello, 2011 – 2015</p>
-        <h1 class="hero-title">458<br />Spider</h1>
-        <p class="hero-lead">
-          Le dernier V8 atmosphérique de Maranello, à ciel ouvert : un toit rigide en aluminium qui se replie en 14 secondes.
-          Déplacez la souris pour tourner autour, faites défiler pour approcher.
-        </p>
-        <a class="hero-drive" href="drive.html">Prendre le volant</a>
+        <p class="hero-kicker" id="hero-kicker"></p>
+        <h1 class="hero-title" id="hero-title"></h1>
+        <p class="hero-lead" id="hero-lead"></p>
+        <a class="hero-drive" id="hero-drive" href="drive.html">Prendre le volant</a>
       </div>
       <div class="hero-hint" id="hint">
         <span class="hint-dot"></span>
@@ -66,145 +67,32 @@
       </div>
     </section>
 
-    <section class="view detail" data-view="aero" id="aero">
-      <article class="card">
-        <h2>Aérodynamique</h2>
-        <p>
-          Les deux ailettes sous la calandre se déforment à haute vitesse pour réduire
-          la portance, sans commande électronique. Le fond plat et le diffuseur arrière
-          produisent 360 kg d'appui à 200 km/h.
-        </p>
-        <dl class="facts">
-          <div><dt>Appui à 200 km/h</dt><dd>360 kg</dd></div>
-          <div><dt>Coefficient Cx</dt><dd>0,33</dd></div>
-        </dl>
-      </article>
-    </section>
-
-    <section class="view detail" data-view="wheel" id="chassis">
-      <article class="card">
-        <h2>Châssis et freinage</h2>
-        <p>
-          Structure en aluminium, jantes de 20 pouces et disques carbone-céramique
-          Brembo de 398 mm à l'avant. Le différentiel électronique E-Diff et le
-          contrôle de traction F1-Trac sont pilotés par le même calculateur.
-        </p>
-        <dl class="facts">
-          <div><dt>Freinage 100 – 0</dt><dd>32,5 m</dd></div>
-          <div><dt>Poids à sec</dt><dd>1 430 kg</dd></div>
-        </dl>
-      </article>
-    </section>
-
-    <section class="view detail" data-view="rear" id="moteur">
-      <article class="card">
-        <h2>Moteur</h2>
-        <p>
-          V8 de 4,5 litres à injection directe, monté en position centrale arrière.
-          570 chevaux atteints à 9 000 tr/min, la plus haute puissance spécifique
-          jamais obtenue sur un moteur atmosphérique de série à son lancement.
-        </p>
-        <dl class="facts">
-          <div><dt>Puissance</dt><dd>570 ch à 9 000 tr/min</dd></div>
-          <div><dt>Couple</dt><dd>540 Nm à 6 000 tr/min</dd></div>
-        </dl>
-      </article>
-    </section>
-
-    <section class="view detail" data-view="top" id="cockpit">
-      <article class="card">
-        <h2>Habitacle</h2>
-        <p>
-          Toutes les commandes de conduite sont regroupées sur le volant :
-          clignotants, essuie-glaces, phares et le sélecteur Manettino.
-          Aucun levier derrière le volant hormis les palettes de boîte.
-        </p>
-        <dl class="facts">
-          <div><dt>Boîte</dt><dd>7 rapports, double embrayage</dd></div>
-          <div><dt>Passage de rapport</dt><dd>60 ms</dd></div>
-        </dl>
-      </article>
-    </section>
+    <div id="details"></div>
 
     <section class="view detail" data-view="specs" id="conduire">
       <article class="card">
         <h2>Prenez le volant</h2>
         <p>
-          Une autoroute libre, trois voies et aucun trafic. Accélérez, freinez, braquez,
-          changez de caméra : la voiture répond en temps réel.
+          Un quartier entier à parcourir : rues, carrefours à feux, trafic. Accélérez, freinez, braquez,
+          changez de caméra : cette voiture répond en temps réel, avec ses propres performances.
         </p>
-        <a class="card-link" href="drive.html">Ouvrir la conduite</a>
+        <a class="card-link" id="card-drive" href="drive.html">Conduire en ville</a>
       </article>
     </section>
 
     <section class="view specs" data-view="specs" id="fiche">
       <div class="specs-inner">
         <h2>Fiche technique</h2>
-        <table class="spec-table">
-          <tbody>
-            <tr><th scope="row">Moteur</th><td>V8 4 499 cm³, atmosphérique, 90°</td></tr>
-            <tr><th scope="row">Puissance</th><td>570 ch (419 kW) à 9 000 tr/min</td></tr>
-            <tr><th scope="row">Couple</th><td>540 Nm à 6 000 tr/min</td></tr>
-            <tr><th scope="row">0 – 100 km/h</th><td>3,4 s</td></tr>
-            <tr><th scope="row">0 – 200 km/h</th><td>10,4 s</td></tr>
-            <tr><th scope="row">Vitesse maximale</th><td>320 km/h</td></tr>
-            <tr><th scope="row">Transmission</th><td>Propulsion, 7 rapports, double embrayage</td></tr>
-            <tr><th scope="row">Longueur / largeur / hauteur</th><td>4 527 / 1 937 / 1 213 mm</td></tr>
-            <tr><th scope="row">Empattement</th><td>2 650 mm</td></tr>
-            <tr><th scope="row">Poids à sec</th><td>1 430 kg</td></tr>
-            <tr><th scope="row">Répartition des masses</th><td>42 % avant, 58 % arrière</td></tr>
-            <tr><th scope="row">Production</th><td>2011 – 2015</td></tr>
-          </tbody>
-        </table>
+        <table class="spec-table"><tbody id="spec-body"></tbody></table>
       </div>
     </section>
   </main>
 
   <footer class="foot">
-    <p>Modèle 3D : Ferrari 458 Spider par vicent091036, licence CC BY 4.0. Rendu en temps réel avec three.js.</p>
+    <p id="credit-line">Modèles 3D : artistes Sketchfab, licences Creative Commons (crédit affiché par voiture). Ville : Kenney, CC0. Rendu en temps réel avec three.js.</p>
   </footer>
 
-  <script>
-"use strict";
-(function(){
-  var c = document.createElement("canvas");
-  var gl = null;
-  try{ gl = c.getContext("webgl2", {failIfMajorPerformanceCaveat:false}) || c.getContext("webgl", {failIfMajorPerformanceCaveat:false}) || c.getContext("experimental-webgl", {failIfMajorPerformanceCaveat:false}); }catch(e){}
-  if(gl) return;
-  var b = document.body;
-  if(b) b.className += (b.className ? " " : "") + "no-webgl";
-  var loader = document.getElementById("loader");
-  if(!loader) return;
-  var ua = navigator.userAgent || "";
-  var isChrome = /Chrome|Chromium|Edg|OPR|Brave/.test(ua) && !/Firefox/.test(ua);
-  var isFirefox = /Firefox/.test(ua);
-  var isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/Chromium/.test(ua);
-  var steps = "";
-  if(isChrome){
-    steps = "<ol><li>Ouvrez <code>chrome://settings/system</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"chrome://settings/system\">Copier</button> \u2192 \u00ab Utiliser l\u2019acc\u00e9l\u00e9ration graphique si disponible \u00bb \u2192 Activ\u00e9 \u2192 <strong>Relancer</strong></li><li>Si rien ne change : <code>chrome://flags/#ignore-gpu-blocklist</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"chrome://flags/#ignore-gpu-blocklist\">Copier</button> \u2192 Enabled \u2192 Relancer</li><li>V\u00e9rifiez <code>chrome://gpu</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"chrome://gpu\">Copier</button> (WebGL doit \u00eatre \u00ab Hardware accelerated \u00bb)</li></ol>";
-  } else if(isFirefox){
-    steps = "<ol><li>Ouvrez <code>about:config</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"about:config\">Copier</button> \u2192 <code>webgl.disabled</code> = false, <code>webgl.force-enabled</code> = true</li><li>V\u00e9rifiez <code>about:support</code> <button type=\"button\" class=\"nogl-copy\" data-copy=\"about:support\">Copier</button> \u2192 WebGL doit \u00eatre activ\u00e9</li></ol>";
-  } else if(isSafari){
-    steps = "<ol><li>Safari \u2192 R\u00e9glages \u2192 Avanc\u00e9 \u2192 cocher \u00ab Afficher le menu D\u00e9veloppement \u00bb</li><li>Menu D\u00e9veloppement \u2192 Fonctionnalit\u00e9s exp\u00e9rimentales \u2192 WebGL activ\u00e9</li><li>Sinon mettez \u00e0 jour iOS/macOS (Safari 15+ requis)</li></ol>";
-  } else {
-    steps = "<p>Installez <a href=\"https://www.google.com/chrome/\">Chrome</a> ou <a href=\"https://www.mozilla.org/firefox/\">Firefox</a> \u00e0 jour.</p>";
-  }
-  var html = "<div class=\"nogl\"><h2>Ce navigateur ne peut pas afficher la 3D</h2><p>L\u2019acc\u00e9l\u00e9ration graphique (WebGL) est d\u00e9sactiv\u00e9e. Le site fonctionne, mais votre navigateur refuse de dessiner la voiture.</p>" + steps + "<p><a href=\"status.html\">Voir le diagnostic complet</a> \u2014 <a href=\"docs.html#depannage\">D\u00e9pannage</a></p></div>";
-  loader.innerHTML = html;
-  var btns = loader.querySelectorAll(".nogl-copy");
-  for(var i=0;i<btns.length;i++){
-    (function(btn){
-      btn.onclick = function(){
-        var txt = btn.getAttribute("data-copy");
-        try{
-          if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt); btn.textContent="Copi\u00e9"; setTimeout(function(){btn.textContent="Copier";},1500); return; }
-        }catch(e){}
-        var ta=document.createElement("textarea"); ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); btn.textContent="Copi\u00e9"; setTimeout(function(){btn.textContent="Copier";},1500);}catch(e){} document.body.removeChild(ta);
-      };
-    })(btns[i]);
-  }
-})();
-  </script>
-  <script type="module" src="main.js?v=7"></script>
+  <script src="nogl.js?v=1"></script>
+  <script type="module" src="main.js?v=25"></script>
 </body>
 </html>
