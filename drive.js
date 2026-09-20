@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=7";
-import { loadVehicle, animateWheels } from "./vehicles.js?v=12";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=8";
+import { loadVehicle, animateWheels } from "./vehicles.js?v=15";
+import { initPhysics, createWorld, createVehicle, createKinematicCar } from "./physics.js?v=3";
 import { buildCity, updateLOD, isDrivable, tileOf, tileAt, tileX, tileZ, road, T, TILE, SIDE, ROADS, LANE, HALF_ROAD, PERIOD } from "./city.js?v=7";
 
 // ---------------------------------------------------------------------------
@@ -100,6 +101,10 @@ async function boot() {
   scene.add(world);
   const city = await buildCity(world, { seed: 7 });
   const map = city.map;
+  loaderBar.style.width = "50%";
+  loaderText.textContent = "Démarrage du moteur physique";
+  await initPhysics();
+  const pworld = createWorld(map);
   loaderBar.style.width = "55%";
 
   // ---------------------------------------------------------------------------
@@ -107,28 +112,29 @@ async function boot() {
 
   loaderText.textContent = `Préparation de la ${carData.brand} ${carData.model}`;
   const player = await loadVehicle({ ...carData.vehicle, paint: carData.paint, accent: carData.accent });
-  const carRoot = new THREE.Group();
-  const bodyPivot = new THREE.Group(); // roulis / tangage sans toucher la pose
-  bodyPivot.add(player.group);
-  carRoot.add(bodyPivot);
-  scene.add(carRoot);
   loaderBar.style.width = "70%";
 
   const PERF = carData.drive;
-  const CAR = {
-    halfWidth: player.size.x / 2,
-    halfLength: player.size.z / 2,
-    wheelbase: player.size.z * 0.58,
-    vmax: PERF.vmax / 3.6,
-    reverseMax: 7,
-    accel: PERF.accel,
-    brake: PERF.brake,
-    grip: PERF.grip,
-  };
+  const tr = (carData.specs.transmission || "").toLowerCase();
+  const drivetrain = tr.includes("traction") ? "fwd" : tr.includes("propulsion") ? "rwd" : "awd";
+  const CAR = { halfWidth: player.size.x / 2, halfLength: player.size.z / 2 };
 
   // Départ : au milieu de la rue centrale ouest-est, voie de droite, face à l'est.
   const startJ = road(2), startI = road(0) + 2;
-  const car = { x: tileX(startI), z: tileZ(startJ) + LANE, yaw: -Math.PI / 2, v: 0, accel: 0, steer: 0, hitFlash: 0, dist: 0, touchingAI: false };
+  const startPose = { x: tileX(startI), z: tileZ(startJ) + LANE, yaw: -Math.PI / 2 };
+  const phys = createVehicle(pworld, player, { ...PERF, drivetrain }, startPose);
+  scene.add(phys.root);
+  // Vue "arcade" de l'état physique, utilisée par la caméra, le trafic, la mini-carte et le HUD.
+  const car = { x: startPose.x, z: startPose.z, yaw: startPose.yaw, v: 0, accel: 0, steer: 0, hitFlash: 0, dist: 0 };
+  function readCar() {
+    const t = phys.body.translation();
+    car.x = t.x;
+    car.z = t.z;
+    car.yaw = phys.heading();
+    car.v = phys.state.forwardSpeed;
+    car.steer = phys.state.steer;
+    car.hitFlash = Math.max(car.hitFlash, phys.state.impact);
+  }
 
   function resetCar() {
     // Remet la voiture sur la voie la plus proche, dans le sens du cap actuel.
@@ -143,10 +149,11 @@ async function boot() {
       car.z = tileZ(j) + (dir > 0 ? LANE : -LANE);
       car.yaw = dir > 0 ? -Math.PI / 2 : Math.PI / 2;
     } else {
-      car.x = tileX(startI);
-      car.z = tileZ(startJ) + LANE;
-      car.yaw = -Math.PI / 2;
+      car.x = startPose.x;
+      car.z = startPose.z;
+      car.yaw = startPose.yaw;
     }
+    phys.teleport(car.x, car.z, car.yaw);
     car.v = 0;
     car.steer = 0;
   }
@@ -155,16 +162,11 @@ async function boot() {
   // Trafic autonome : des voitures de la collection qui suivent les voies et respectent les feux.
 
   loaderText.textContent = "Mise en place du trafic";
-  const TRAFFIC_COUNT = finePointer ? 26 : 16;
+  // Trafic : les modèles réalistes les plus légers, maillages fusionnés, en nombre mesuré.
+  const TRAFFIC_COUNT = finePointer ? 12 : 7;
   const traffic = [];
-  const trafficSpecs = CARS.filter((c) => c.id !== carData.id);
-  const extra = [
-    { vehicle: { src: "assets/cars/q-taxi.glb", kind: "quaternius", length: 4.4 }, paint: "#f2c319" },
-    { vehicle: { src: "assets/cars/kenney/van.glb", kind: "kenney", length: 4.9, width: 1.95 }, paint: "#d8dbe0" },
-    { vehicle: { src: "assets/cars/kenney/delivery.glb", kind: "kenney", length: 5.4, width: 2.1 }, paint: "#2f6f4e" },
-    { vehicle: { src: "assets/cars/q-police.glb", kind: "quaternius", length: 4.6 }, paint: "#e8ecf0" },
-  ];
-  const palette = ["#d8dbe0", "#2b2e33", "#8b9099", "#9c1f28", "#1f3a6d", "#e0521c", "#c9b79c", "#3b5a3a", "#e8ecf0", "#5a3a7a"];
+  const LIGHT = new Set(["sandero", "clio", "rs3", "911", "458", "revuelto", "chiron"]);
+  const trafficSpecs = CARS.filter((c) => LIGHT.has(c.id));
   const rnd = (n) => Math.floor(Math.random() * n);
 
   // Graphe : nœuds = carrefours (a, b) ; on roule à droite, voie décalée de LANE.
@@ -232,11 +234,11 @@ async function boot() {
   async function spawnTraffic() {
     const loads = [];
     for (let n = 0; n < TRAFFIC_COUNT; n++) {
-      const useExtra = Math.random() < 0.3;
-      const spec = useExtra ? extra[rnd(extra.length)] : trafficSpecs[rnd(trafficSpecs.length)];
-      const paint = useExtra ? spec.paint : Math.random() < 0.5 ? spec.paint : palette[rnd(palette.length)];
+      const spec = trafficSpecs[rnd(trafficSpecs.length)];
+      // Variante allégée (moins de triangles, textures 512) : assez pour une voiture qui passe.
+      const lite = { ...spec.vehicle, src: spec.vehicle.src.replace("/real/", "/real/lite/") };
       loads.push(
-        loadVehicle({ ...spec.vehicle, paint }).then((v) => {
+        loadVehicle(lite).then((v) => {
           const a = rnd(ROADS), b = rnd(ROADS);
           let d = rnd(4);
           // Direction valide depuis (a, b).
@@ -255,6 +257,8 @@ async function boot() {
             ai.idx = Math.floor(Math.random() * (path.length * 0.6));
             [ai.x, ai.z] = path[ai.idx];
           }
+          ai.kin = createKinematicCar(pworld, spec.vehicle.length, v.size.x, v.size.y);
+          ai.kin.move(ai.x, ai.z, ai.yaw);
           scene.add(v.group);
           traffic.push(ai);
         })
@@ -339,6 +343,7 @@ async function boot() {
       }
       ai.v.group.position.set(ai.x, 0, ai.z);
       ai.v.group.rotation.y = ai.yaw;
+      ai.kin.move(ai.x, ai.z, ai.yaw);
       animateWheels(ai.v, step, 0);
     }
   }
@@ -472,100 +477,23 @@ async function boot() {
   soundToggle.addEventListener("click", toggleSound);
 
   // ---------------------------------------------------------------------------
-  // Simulation du joueur
+  // Simulation du joueur : le moteur physique fait le travail, on lui passe les commandes.
 
-  const GEARS = 7;
-  const gearTops = Array.from({ length: GEARS + 1 }, (_, g) => (g === 0 ? 0 : (PERF.vmax * g) / GEARS));
-  const gearFor = (kmh) => {
-    for (let g = GEARS; g >= 1; g--) if (kmh >= gearTops[g - 1]) return g;
-    return 1;
-  };
-
+  const inputs = { throttle: 0, brake: 0, steer: 0, handbrake: false, shiftUp: false, shiftDown: false };
   function stepCar(dt) {
-    const throttle = keys.gas ? 1 : 0;
-    const brake = keys.brake ? 1 : 0;
-    const steerTarget = touchSteer.value !== 0 ? touchSteer.value : (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
-
-    const lock = (0.6 * Math.min(CAR.grip, 1.2)) / (1 + Math.abs(car.v) / 12);
-    car.steer = THREE.MathUtils.damp(car.steer, steerTarget * lock, 8, dt);
-
-    let a = 0;
-    const v = car.v;
-    const speedRatio = Math.min(Math.abs(v) / CAR.vmax, 1);
-    if (throttle && v >= -0.5) a += CAR.accel * (1 - Math.pow(speedRatio, 1.5));
-    if (brake) {
-      if (v > 0.6) a -= CAR.brake;
-      else if (v > -CAR.reverseMax) a -= 3.5;
-    }
-    if (keys.hand) a -= v > 0 ? 18 : v < 0 ? -18 : 0;
-    a -= 0.003 * v * Math.abs(v);
-    if (!throttle && !brake) a -= Math.sign(v) * Math.min(Math.abs(v) / dt, 1.2);
-    car.accel = a;
-    car.v += a * dt;
-    if (Math.abs(car.v) < 0.02 && !throttle && !brake) car.v = 0;
-
-    if (Math.abs(car.v) > 0.01) car.yaw += (car.v / CAR.wheelbase) * Math.tan(car.steer) * dt;
-    const fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw);
-    const rx = -fz, rz = fx; // vecteur latéral (droite)
-
-    // Déplacement avec collision contre trottoirs et bâtiments : on teste les quatre coins,
-    // axe par axe, pour glisser le long des obstacles au lieu de s'y coller.
-    const corners = (x, z) => [
-      [x + fx * CAR.halfLength + rx * CAR.halfWidth, z + fz * CAR.halfLength + rz * CAR.halfWidth],
-      [x + fx * CAR.halfLength - rx * CAR.halfWidth, z + fz * CAR.halfLength - rz * CAR.halfWidth],
-      [x - fx * CAR.halfLength + rx * CAR.halfWidth, z - fz * CAR.halfLength + rz * CAR.halfWidth],
-      [x - fx * CAR.halfLength - rx * CAR.halfWidth, z - fz * CAR.halfLength - rz * CAR.halfWidth],
-    ];
-    const free = (x, z) => corners(x, z).every(([px, pz]) => isDrivable(map, px, pz));
-    const nx = car.x + fx * car.v * dt, nz = car.z + fz * car.v * dt;
-    let hit = false;
-    if (free(nx, nz)) {
-      car.x = nx;
-      car.z = nz;
-    } else if (free(nx, car.z)) {
-      car.x = nx;
-      hit = true;
-    } else if (free(car.x, nz)) {
-      car.z = nz;
-      hit = true;
-    } else hit = true;
-    if (hit) {
-      if (Math.abs(car.v) > 3) car.hitFlash = 1;
-      car.v *= Math.abs(car.v) > 3 ? 0.35 : 0.8;
-    }
-
-    // Collisions avec le trafic : répulsion des deux véhicules, perte de vitesse une seule fois par
-    // contact (sinon une voiture arrêtée contre nous nous immobiliserait définitivement).
-    let touchingAny = false;
-    for (const ai of traffic) {
-      const dx = car.x - ai.x, dz = car.z - ai.z;
-      const d = Math.hypot(dx, dz);
-      const minD = (CAR.halfLength + ai.length / 2) * 0.8;
-      if (d < minD && d > 0.001) {
-        touchingAny = true;
-        const push = (minD - d) * 0.5;
-        car.x += (dx / d) * push;
-        car.z += (dz / d) * push;
-        ai.x -= (dx / d) * push * 0.5;
-        ai.z -= (dz / d) * push * 0.5;
-        if (!car.touchingAI) {
-          if (Math.abs(car.v) > 2) car.hitFlash = 1;
-          car.v *= 0.5;
-          ai.speed *= 0.3;
-        }
-      }
-    }
-    car.touchingAI = touchingAny;
+    inputs.throttle = keys.gas ? 1 : 0;
+    inputs.brake = keys.brake ? 1 : 0;
+    inputs.steer = touchSteer.value !== 0 ? touchSteer.value : (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+    inputs.handbrake = keys.hand;
+    phys.step(dt, inputs);
+    inputs.shiftUp = inputs.shiftDown = false;
+    readCar();
+    car.dist += Math.abs(car.v) * dt;
     car.hitFlash = Math.max(0, car.hitFlash - dt * 3);
-    car.dist += car.v * dt;
-
-    carRoot.position.set(car.x, 0, car.z);
-    carRoot.rotation.y = car.yaw;
-    const roll = THREE.MathUtils.clamp(-car.steer * car.v * 0.006, -0.05, 0.05);
-    const pitch = THREE.MathUtils.clamp(car.accel * 0.004, -0.035, 0.035);
-    bodyPivot.rotation.z = THREE.MathUtils.damp(bodyPivot.rotation.z, roll, 6, dt);
-    bodyPivot.rotation.x = THREE.MathUtils.damp(bodyPivot.rotation.x, pitch, 6, dt);
-    animateWheels(player, car.v * dt, car.steer);
+    // Un choc avec une voiture du trafic la fait réagir (elle pile).
+    if (phys.state.impact > 0.3) {
+      for (const ai of traffic) if (Math.hypot(ai.x - car.x, ai.z - car.z) < CAR.halfLength + ai.length / 2 + 0.5) ai.speed *= 0.3;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -628,7 +556,7 @@ async function boot() {
     sky.position.copy(camera.position);
     updateLOD(camera.position);
     // Trafic lointain masqué (au-delà du brouillard).
-    for (const ai of traffic) ai.v.group.visible = Math.hypot(ai.x - camera.position.x, ai.z - camera.position.z) < 300;
+    for (const ai of traffic) ai.v.group.visible = !ai.hidden && Math.hypot(ai.x - camera.position.x, ai.z - camera.position.z) < 170;
     sun.position.set(car.x + sunOffset.x, sunOffset.y, car.z + sunOffset.z);
     sun.target.position.set(car.x, 0, car.z);
   }
@@ -696,14 +624,9 @@ async function boot() {
     hudTimer += dt;
     mapTimer += dt;
     const kmh = Math.abs(car.v) * 3.6;
-    const gear = car.v < -0.3 ? "R" : kmh < 1 ? "N" : String(gearFor(kmh));
-    let rpmFrac;
-    if (gear === "N") rpmFrac = keys.gas ? 0.5 : 0.1;
-    else if (gear === "R") rpmFrac = Math.min(kmh / 30, 1);
-    else {
-      const g = Number(gear);
-      rpmFrac = 0.25 + 0.75 * THREE.MathUtils.clamp((kmh - gearTops[g - 1]) / (gearTops[g] - gearTops[g - 1]), 0, 1);
-    }
+    const st = phys.state;
+    const gear = st.reverse ? "R" : kmh < 1 && !keys.gas ? "N" : String(st.gear);
+    const rpmFrac = THREE.MathUtils.clamp((st.rpm - 800) / ((PERF.redline || 7000) - 800), 0, 1);
     if (hudTimer > 0.08) {
       hudTimer = 0;
       hudSpeed.textContent = String(Math.round(kmh));
@@ -746,7 +669,9 @@ async function boot() {
     }
   }
 
-  const quality = { ratio: Math.min(window.devicePixelRatio, 1.25), min: 0.55, frames: 0, time: 0 };
+  // Qualité adaptative : résolution d'abord, puis ombres, puis densité du trafic, pour tenir
+  // 30 images/s sur les puces graphiques intégrées comme sur les téléphones.
+  const quality = { ratio: Math.min(window.devicePixelRatio, 1.25), min: 0.42, frames: 0, time: 0, level: 0, lowSince: 0 };
   function adaptQuality(dt) {
     quality.frames++;
     quality.time += dt;
@@ -762,6 +687,16 @@ async function boot() {
       renderer.setPixelRatio(quality.ratio);
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
+    // Résolution déjà au plancher et toujours lent : on dégrade par paliers.
+    if (fps < 24 && quality.ratio <= quality.min + 0.01) {
+      quality.lowSince += 1.5;
+      if (quality.lowSince >= 3 && quality.level < 2) {
+        quality.level++;
+        quality.lowSince = 0;
+        if (quality.level === 1) renderer.shadowMap.enabled = false;
+        if (quality.level === 2) traffic.forEach((ai, k) => (ai.hidden = k % 2 === 1));
+      }
+    } else quality.lowSince = 0;
   }
 
   const clock = new THREE.Clock();
@@ -769,6 +704,7 @@ async function boot() {
     const rawDt = clock.getDelta();
     const dt = Math.min(rawDt, 0.25);
     if (driving) simulate(dt);
+    phys.sync(dt);
     city.stepLights(dt);
     stepTraffic(Math.min(dt, 0.05));
     stepCamera(Math.min(dt, 0.05));
@@ -783,9 +719,12 @@ async function boot() {
     renderer.render(scene, camera);
     return canvas.toDataURL("image/png");
   };
-  window.__drive = { car, keys, traffic, city, resetCar, startDriving, camera, scene, renderer, cycleCamera };
+  window.__drive = { car, keys, traffic, city, resetCar, startDriving, camera, scene, renderer, cycleCamera, phys };
 
-  stepCar(FIXED_DT);
+  // Quelques pas pour poser la voiture sur ses suspensions avant la première image.
+  for (let i = 0; i < 60; i++) phys.step(FIXED_DT, inputs);
+  readCar();
+  phys.sync(FIXED_DT);
   stepWorld();
   loaderText.textContent = "Prêt";
   loaderBar.style.width = "100%";

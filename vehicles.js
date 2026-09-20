@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+import { mergeVertices, mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("vendor/three/examples/jsm/libs/draco/gltf/");
@@ -431,6 +431,56 @@ function dressSketchfab(model, spec) {
   return { wheels, radius, paint: paintMat };
 }
 
+// Fusionne les maillages de carrosserie par matériau (hors roues) : un modèle Sketchfab compte
+// souvent 100 à 300 maillages, ce qui multiplie les appels de rendu pour le trafic.
+function mergeBodyMeshes(model, wheelPivots) {
+  model.updateMatrixWorld(true);
+  const rootInv = new THREE.Matrix4().copy(model.matrixWorld).invert();
+  const byMat = new Map();
+  const toRemove = [];
+  model.traverse((o) => {
+    if (!o.isMesh || !o.visible) return;
+    let p = o.parent, inWheel = false;
+    while (p) {
+      if (wheelPivots.includes(p)) inWheel = true;
+      p = p.parent;
+    }
+    if (inWheel || Array.isArray(o.material)) return;
+    const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(rootInv, o.matrixWorld));
+    // Attributs homogènes : position, normale, uv.
+    for (const name of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(name)) g.deleteAttribute(name);
+    if (!g.attributes.normal) g.computeVertexNormals();
+    if (!g.attributes.uv) g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    if (!byMat.has(o.material)) byMat.set(o.material, []);
+    byMat.get(o.material).push(g.index ? g.toNonIndexed() : g);
+    toRemove.push(o);
+  });
+  for (const o of toRemove) o.parent.remove(o);
+  for (const [mat, geos] of byMat) {
+    const merged = mergeGeometries(geos, false);
+    if (!merged) continue;
+    model.add(new THREE.Mesh(merged, mat));
+  }
+  // Même chose à l'intérieur de chaque roue.
+  for (const pivot of wheelPivots) {
+    const groups = new Map();
+    const kids = pivot.children.filter((k) => k.isMesh && !Array.isArray(k.material));
+    for (const k of kids) {
+      const g = k.geometry.index ? k.geometry.toNonIndexed() : k.geometry.clone();
+      for (const name of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(name)) g.deleteAttribute(name);
+      if (!g.attributes.normal) g.computeVertexNormals();
+      if (!g.attributes.uv) g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+      if (!groups.has(k.material)) groups.set(k.material, []);
+      groups.get(k.material).push(g);
+      pivot.remove(k);
+    }
+    for (const [mat, geos] of groups) {
+      const merged = mergeGeometries(geos, false);
+      if (merged) pivot.add(new THREE.Mesh(merged, mat));
+    }
+  }
+}
+
 // Recentre la géométrie d'une roue sur son propre pivot pour pouvoir la faire tourner.
 function recenterWheel(mesh) {
   mesh.geometry = mesh.geometry.clone();
@@ -445,23 +495,64 @@ function recenterWheel(mesh) {
  * @param {object} spec  { src, kind: "quaternius"|"kenney", length, paint, accent? }
  * @returns {Promise<{group, wheels:{front:THREE.Object3D[], all:THREE.Object3D[]}, size:THREE.Vector3, materials}>}
  */
-export async function loadVehicle(spec) {
-  const gltf = await loadGltf(spec.src);
-  const model = gltf.scene.clone(true);
-  // Chaque instance a ses propres matériaux et géométries de roues.
-  model.traverse((o) => {
-    if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map((m) => m.clone()) : o.material.clone();
-  });
+const prepared = new Map();
 
+/** Prépare (habille) un modèle réaliste une seule fois ; les appels suivants clonent le résultat. */
+async function preparedSketchfab(spec) {
+  const key = [spec.src, spec.paint || "", spec.paintMaterial || "", spec.recolor ? 1 : 0, spec.forward || "+z"].join("|");
+  if (!prepared.has(key)) {
+    prepared.set(
+      key,
+      loadGltf(spec.src).then((gltf) => {
+        const model = gltf.scene.clone(true);
+        // Un clone par matériau source (et non par maillage) : les maillages qui partagent un
+        // matériau doivent continuer à le partager pour pouvoir être fusionnés.
+        const cloned = new Map();
+        const cloneMat = (m) => {
+          if (!cloned.has(m)) cloned.set(m, m.clone());
+          return cloned.get(m);
+        };
+        model.traverse((o) => {
+          if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(cloneMat) : cloneMat(o.material);
+        });
+        const r = dressSketchfab(model, spec);
+        mergeBodyMeshes(model, r.wheels.all);
+        return { model, ...r };
+      })
+    );
+  }
+  const t = await prepared.get(key);
+  // Clone : mêmes géométries et matériaux (partagés), roues retrouvées par correspondance d'ordre.
+  const model = t.model.clone(true);
+  const srcPivots = t.wheels.all;
+  const map = new Map();
+  const walk = (a, b) => {
+    map.set(a, b);
+    for (let i = 0; i < a.children.length; i++) walk(a.children[i], b.children[i]);
+  };
+  walk(t.model, model);
+  const wheels = { all: srcPivots.map((p) => map.get(p)), front: t.wheels.front.map((p) => map.get(p)) };
+  return { model, wheels, paint: t.paint, radius: t.radius };
+}
+
+export async function loadVehicle(spec) {
+  let model;
   let wheels = { front: [], all: [] };
   let materials;
   let modelWheelRadius = 0;
   if (spec.kind === "sketchfab") {
-    const r = dressSketchfab(model, spec);
+    const r = await preparedSketchfab(spec);
+    model = r.model;
     wheels = r.wheels;
     materials = { paint: r.paint, accent: r.paint };
     modelWheelRadius = r.radius;
   } else {
+    const gltf = await loadGltf(spec.src);
+    model = gltf.scene.clone(true);
+    // Chaque instance a ses propres matériaux et géométries de roues.
+    model.traverse((o) => {
+      if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map((m) => m.clone()) : o.material.clone();
+    });
     model.traverse((o) => {
       if (!o.isMesh) return;
       const n = (o.name + " " + (o.parent?.name || "")).toLowerCase();

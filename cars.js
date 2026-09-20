@@ -28,7 +28,7 @@ export const CARS = [
       { view: "rear", title: "Moteur", text: "Le TCe 90, trois cylindres turbo partagé avec la Clio. Sobre, discret, et assez de couple bas pour ne pas avoir à rétrograder en ville.", facts: [["Consommation", "5,3 l/100 km"], ["CO₂", "120 g/km"]] },
       { view: "top", title: "Habitacle", text: "Un écran de 8 pouces qui reflète simplement le téléphone, des commandes physiques pour la clim, cinq vraies places. Rien à apprendre.", facts: [["Places", "5"], ["Écran", "8 pouces"]] },
     ],
-    drive: { vmax: 175, accel: 5.5, brake: 9, grip: 0.85, mass: 1050 },
+    drive: { vmax: 175, accel: 5.5, brake: 9, grip: 0.85, mass: 1050, redline: 6000 },
   },
   {
     id: "clio",
@@ -51,7 +51,7 @@ export const CARS = [
       { view: "rear", title: "Hybride", text: "Une boîte à crabots sans embrayage héritée de la Formule 1, deux moteurs électriques : en ville, 80 % du temps se fait moteur essence coupé.", facts: [["Consommation", "4,2 l/100 km"], ["Batterie", "1,2 kWh"]] },
       { view: "top", title: "Habitacle", text: "Écran vertical de 9,3 pouces, sellerie recyclée, planche de bord souple. La qualité perçue a fait un bond entre la quatrième et la cinquième génération.", facts: [["Écran", "9,3 pouces"], ["Coffre", "301 l"]] },
     ],
-    drive: { vmax: 180, accel: 7, brake: 10, grip: 0.9, mass: 1300 },
+    drive: { vmax: 180, accel: 7, brake: 10, grip: 0.9, mass: 1300, redline: 6500 },
   },
   {
     id: "508",
@@ -74,7 +74,7 @@ export const CARS = [
       { view: "rear", title: "Hybride rechargeable", text: "Jusqu'à 50 km en tout électrique, puis le quatre cylindres PureTech reprend la main. Le meilleur des deux mondes pour un usage mixte.", facts: [["Autonomie électrique", "50 km"], ["Batterie", "11,5 kWh"]] },
       { view: "top", title: "Habitacle", text: "Volant compact, compteurs numériques en hauteur, touches piano en aluminium. On regarde la route sans baisser les yeux.", facts: [["Écran", "10 pouces"], ["Coffre", "487 l"]] },
     ],
-    drive: { vmax: 240, accel: 8.5, brake: 11, grip: 0.95, mass: 1780 },
+    drive: { vmax: 240, accel: 8.5, brake: 11, grip: 0.95, mass: 1780, redline: 6200 },
   },
   {
     id: "tiguan",
@@ -97,7 +97,7 @@ export const CARS = [
       { view: "rear", title: "Diesel moderne", text: "Le 2,0 TDI à double injection d'urée est parmi les plus propres de sa catégorie. 1 000 km d'autonomie par plein pour les longs trajets.", facts: [["Consommation", "5,6 l/100 km"], ["Réservoir", "55 l"]] },
       { view: "top", title: "Habitacle", text: "Écran de 15 pouces, molette de conduite rétroéclairée, sièges massants ergoActive. Le confort d'un segment supérieur.", facts: [["Coffre", "652 l"], ["Écran", "15 pouces"]] },
     ],
-    drive: { vmax: 220, accel: 8, brake: 10.5, grip: 1.0, mass: 1750 },
+    drive: { vmax: 220, accel: 8, brake: 10.5, grip: 1.0, mass: 1750, redline: 4800 },
   },
   {
     id: "rs3",
@@ -120,7 +120,7 @@ export const CARS = [
       { view: "rear", title: "Cinq cylindres", text: "L'ordre d'allumage 1-2-4-5-3 donne ce son inimitable, hérité des Audi Quattro de rallye des années 80. 400 ch depuis 2,5 litres.", facts: [["Régime maxi", "7 000 tr/min"], ["Son", "1-2-4-5-3"]] },
       { view: "top", title: "Habitacle", text: "Compteurs RS avec compte-tours à barres, sièges baquets, volant à méplat. Un mode RS Torque Rear pour le dérapage contrôlé, sur circuit.", facts: [["Coffre", "282 l"], ["Modes", "7"]] },
     ],
-    drive: { vmax: 290, accel: 13, brake: 13, grip: 1.15, mass: 1570 },
+    drive: { vmax: 290, accel: 13, brake: 13, grip: 1.15, mass: 1570, redline: 7000 },
   },
   {
     id: "x5m",
@@ -143,7 +143,7 @@ export const CARS = [
       { view: "rear", title: "V8 S68", text: "Le même V8 que la M5, avec un alterno-démarreur de 48 V qui gomme le turbo lag. 750 Nm disponibles dès 1 800 tr/min.", facts: [["Régime maxi", "7 200 tr/min"], ["Consommation", "12,5 l/100 km"]] },
       { view: "top", title: "Habitacle", text: "Cuir Merino étendu, écran incurvé, sièges M multifonctions chauffants et ventilés. Une pièce à vivre qui accélère.", facts: [["Coffre", "650 l"], ["Écran", "14,9 pouces"]] },
     ],
-    drive: { vmax: 290, accel: 12, brake: 12.5, grip: 1.05, mass: 2385 },
+    drive: { vmax: 290, accel: 12, brake: 12.5, grip: 1.05, mass: 2385, redline: 7200 },
   },
   {
     id: "911",
@@ -166,7 +166,7 @@ export const CARS = [
       { view: "rear", title: "Biturbo", text: "Deux turbos symétriques sur un six cylindres à plat de trois litres : 450 ch, 530 Nm disponibles de 2 300 à 5 000 tr/min. Le son reste celui d'un flat-six, l'élasticité est celle d'un V8.", facts: [["Régime maxi", "7 500 tr/min"], ["0 – 200 km/h", "12,4 s"]] },
       { view: "top", title: "Habitacle", text: "Compte-tours analogique au centre, écrans de part et d'autre, bouton de démarrage à gauche comme aux 24 Heures du Mans, matériaux sans faute. Deux places, deux petits sièges à l'arrière.", facts: [["Coffre avant", "132 l"], ["Places", "2 + 2"]] },
     ],
-    drive: { vmax: 306, accel: 14.5, brake: 14.5, grip: 1.25, mass: 1565 },
+    drive: { vmax: 306, accel: 14.5, brake: 14.5, grip: 1.25, mass: 1565, redline: 7500 },
   },
   {
     id: "458",
@@ -189,7 +189,7 @@ export const CARS = [
       { view: "rear", title: "Moteur", text: "V8 de 4,5 litres à injection directe, position centrale arrière. 570 ch à 9 000 tr/min : la plus haute puissance spécifique jamais obtenue sur un atmosphérique de série.", facts: [["Régime maxi", "9 000 tr/min"], ["Puissance spécifique", "127 ch/l"]] },
       { view: "top", title: "Habitacle", text: "Toutes les commandes sont sur le volant : clignotants, essuie-glaces, phares, Manettino. Aucun levier derrière le volant hormis les palettes.", facts: [["Toit", "14 s"], ["Places", "2"]] },
     ],
-    drive: { vmax: 320, accel: 15, brake: 15, grip: 1.3, mass: 1430 },
+    drive: { vmax: 320, accel: 15, brake: 15, grip: 1.3, mass: 1430, redline: 9000 },
   },
   {
     id: "revuelto",
@@ -212,7 +212,7 @@ export const CARS = [
       { view: "rear", title: "V12 L545", text: "Le moteur est tourné de 180° par rapport à l'Aventador, la boîte est derrière lui, transversale. 825 ch pour le seul V12, à 9 250 tr/min.", facts: [["Régime maxi", "9 500 tr/min"], ["Poids moteur", "218 kg"]] },
       { view: "top", title: "Habitacle", text: "Trois écrans, un volant qui regroupe les modes de conduite sur deux molettes, des sièges en carbone. Treize combinaisons de conduite, dont un mode électrique pur.", facts: [["Modes", "13"], ["Autonomie électrique", "10 km"]] },
     ],
-    drive: { vmax: 350, accel: 22, brake: 17, grip: 1.45, mass: 1772 },
+    drive: { vmax: 350, accel: 22, brake: 17, grip: 1.45, mass: 1772, redline: 9500 },
   },
   {
     id: "chiron",
@@ -235,7 +235,7 @@ export const CARS = [
       { view: "rear", title: "W16", text: "Seize cylindres en W, huit litres, quatre turbocompresseurs qui s'enclenchent par paires. À plein régime, le moteur avale 60 000 litres d'air par minute.", facts: [["Régime maxi", "7 100 tr/min"], ["Radiateurs", "10"]] },
       { view: "top", title: "Habitacle", text: "Aluminium fraisé, cuir, aucun écran central : la vitesse est affichée sur un cadran mécanique gradué jusqu'à 500. Bugatti refuse les écrans qui vieillissent.", facts: [["Compteur", "500 km/h"], ["Places", "2"]] },
     ],
-    drive: { vmax: 420, accel: 24, brake: 17, grip: 1.4, mass: 1995 },
+    drive: { vmax: 420, accel: 24, brake: 17, grip: 1.4, mass: 1995, redline: 7100 },
   },
 ];
 

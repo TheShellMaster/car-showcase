@@ -217,9 +217,9 @@ export function createVehicle(world, visual, perf, start) {
     if (inputs.shiftDown && state.manual && state.gear > 1) state.gear--;
 
     // Direction : angle maximal qui diminue avec la vitesse, réponse lissée.
-    const lock = 0.55 / (1 + kmh / 45);
+    const lock = 0.6 / (1 + kmh / 30);
     state.steer = THREE.MathUtils.damp(state.steer, inputs.steer * lock, 10, dt);
-    for (const k of frontIdx) vehicle.setWheelSteering(k, -state.steer); // Rapier : angle positif = à droite
+    for (const k of frontIdx) vehicle.setWheelSteering(k, state.steer); // Rapier : angle positif = à gauche
 
     // Force motrice : accélération nominale × courbe de couple × rapport, plafonnée à vmax par la traînée.
     const vmax = perf.vmax / 3.6;
@@ -274,7 +274,7 @@ export function createVehicle(world, visual, perf, start) {
       const len = vehicle.wheelSuspensionLength(k);
       const dy = restLength - (len ?? restLength);
       wi.mesh.position.y = wi.baseY - dy / visual.scale;
-      wi.mesh.rotation.y = wi.isFront ? -vehicle.wheelSteering(k) : 0;
+      wi.mesh.rotation.y = wi.isFront ? vehicle.wheelSteering(k) : 0;
       wi.mesh.rotation.x -= (state.forwardSpeed * dt) / r;
     });
   }
