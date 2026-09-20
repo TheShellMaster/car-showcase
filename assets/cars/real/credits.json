@@ -1,0 +1,92 @@
+{
+  "sandero": {
+    "name": "Dacia Sandero 2018",
+    "author": "🇷🇴シRuletăシ🇷🇴",
+    "authorUrl": "https://sketchfab.com/romanian_guy_0069",
+    "url": "https://sketchfab.com/3d-models/dacia-sandero-2018-8ee1188f4d694d4c9b648c8dd5b471da",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 114661
+  },
+  "clio": {
+    "name": "2020 Renault Clio",
+    "author": "tonielpro520",
+    "authorUrl": "https://sketchfab.com/tonielpro520",
+    "url": "https://sketchfab.com/3d-models/2020-renault-clio-4c528fefa4154004bbc6305faf71836c",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 328579
+  },
+  "508": {
+    "name": "Peugeot 508",
+    "author": "Mona x Supercars",
+    "authorUrl": "https://sketchfab.com/Car2022",
+    "url": "https://sketchfab.com/3d-models/peugeot-508-8192f18de3d2431197c9e707666212c7",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 874658
+  },
+  "tiguan": {
+    "name": "2024 Volkswagen Tiguan L Pro 380TSI 4WD R-line",
+    "author": "Ddiaz Design",
+    "authorUrl": "https://sketchfab.com/ddiaz-design",
+    "url": "https://sketchfab.com/3d-models/2024-volkswagen-tiguan-l-pro-380tsi-4wd-r-line-0703b26f5c6446dabf1ab3caecce586f",
+    "license": "CC Attribution-NonCommercial-ShareAlike",
+    "licenseUrl": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "faces": 388523
+  },
+  "rs3": {
+    "name": "2018 Audi RS 3 Sportback",
+    "author": "Galaxy Car Showroom",
+    "authorUrl": "https://sketchfab.com/adrianaflak09",
+    "url": "https://sketchfab.com/3d-models/2018-audi-rs-3-sportback-77d3dcacacb7413e9685a27f77f651f8",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 88901
+  },
+  "x5m": {
+    "name": "2020 BMW X5 M Competition",
+    "author": "David_Holiday",
+    "authorUrl": "https://sketchfab.com/David_Holiday",
+    "url": "https://sketchfab.com/3d-models/2020-bmw-x5-m-competition-9b211d525797457e988c903f67d0b753",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 319318
+  },
+  "911": {
+    "name": "2019 Porsche 911 Carrera 4S (992)",
+    "author": "Ddiaz Design",
+    "authorUrl": "https://sketchfab.com/ddiaz-design",
+    "url": "https://sketchfab.com/3d-models/2019-porsche-911-carrera-4s-992-4e324fdfada24355aba3f34cf09a9552",
+    "license": "CC Attribution-NonCommercial-ShareAlike",
+    "licenseUrl": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "faces": 55321
+  },
+  "458": {
+    "name": "2013 Ferrari 458 Spider",
+    "author": "Ddiaz Design",
+    "authorUrl": "https://sketchfab.com/ddiaz-design",
+    "url": "https://sketchfab.com/3d-models/2013-ferrari-458-spider-d12eab5e5c6d421da468e1c348a860a6",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 83329
+  },
+  "revuelto": {
+    "name": "Free Lamborghini Revuelto",
+    "author": "ALIEEEN",
+    "authorUrl": "https://sketchfab.com/ALIEEEN",
+    "url": "https://sketchfab.com/3d-models/free-lamborghini-revuelto-cf52245eb68f48daa909c7ad2a8deaa3",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 91671
+  },
+  "chiron": {
+    "name": "Bugatti Chiron Super Sport 300+",
+    "author": "kevin (ケビン)",
+    "authorUrl": "https://sketchfab.com/sohyalebret",
+    "url": "https://sketchfab.com/3d-models/bugatti-chiron-super-sport-300-24c595760e194e63bcfc96508338fd3a",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 186746
+  }
+}

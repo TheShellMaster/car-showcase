@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=3";
-import { loadVehicle } from "./vehicles.js?v=4";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=7";
+import { loadVehicle } from "./vehicles.js?v=12";
 
 const canvas = document.getElementById("scene");
 const loaderBar = document.getElementById("loader-bar");
@@ -47,7 +47,8 @@ function boot() {
   key.shadow.camera.right = key.shadow.camera.top = 4;
   key.shadow.camera.near = 1;
   key.shadow.camera.far = 20;
-  key.shadow.bias = -0.0005;
+  key.shadow.bias = -0.0002;
+  key.shadow.normalBias = 0.04; // évite l'acné d'ombre sur les carrosseries fines
   key.shadow.radius = 4;
   scene.add(key);
   const fill = new THREE.DirectionalLight(0xdfe6f2, 0.7);
@@ -266,6 +267,7 @@ function boot() {
 
     // Transition : l'ancienne sort d'un côté, la nouvelle entre de l'autre.
     if (vehicle) {
+      if (swap.outgoing) pivot.remove(swap.outgoing); // bascule interrompue : on nettoie la précédente
       swap.outgoing = vehicle.group;
       swap.dir = car.rank >= prevRank ? 1 : -1;
       swap.t = 0;
@@ -348,6 +350,7 @@ function boot() {
     requestAnimationFrame(animate);
   }
 
+  window.__studio = { renderer, scene, camera, key, get vehicle() { return vehicle; } };
   window.__renderStill = () => {
     renderer.render(scene, camera);
     return canvas.toDataURL("image/png");

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=3";
-import { loadVehicle, animateWheels } from "./vehicles.js?v=4";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=7";
+import { loadVehicle, animateWheels } from "./vehicles.js?v=12";
 import { buildCity, updateLOD, isDrivable, tileOf, tileAt, tileX, tileZ, road, T, TILE, SIDE, ROADS, LANE, HALF_ROAD, PERIOD } from "./city.js?v=7";
 
 // ---------------------------------------------------------------------------
