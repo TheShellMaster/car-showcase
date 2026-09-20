@@ -294,7 +294,7 @@ export function createVehicle(world, visual, perf, start) {
     return Math.atan2(-fwd.x, -fwd.z);
   }
 
-  return { state, step, sync, teleport, heading, forward: fwd, body, root, chassisY, wheelRadius: r };
+  return { state, step, sync, teleport, heading, forward: fwd, body, root, chassisY, wheelRadius: r, wheelInfo };
 }
 
 /** Quaternion d'un cap : l'avant du corps (+z) doit pointer vers (-sin yaw, -cos yaw). */
