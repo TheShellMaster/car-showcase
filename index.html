@@ -4,7 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>La Collection — dix-sept voitures, de la Sandero à la Chiron</title>
-  <meta name="description" content="Dix-sept voitures en 3D interactive, de la plus accessible à la plus prestigieuse. Faites pivoter chaque modèle, découvrez ses détails, puis prenez le volant en ville." />
+  <meta name="description" content="Dix-sept voitures en 3D interactive, de la plus accessible à la plus prestigieuse. Faites pivoter chaque modèle et découvrez ses détails et sa fiche technique." />
+  <meta name="keywords" content="voitures 3D, collection de voitures, configurateur 3D, three.js, WebGL, Ferrari 458, Porsche 911, Bugatti Chiron, Lamborghini Revuelto, fiche technique voiture, showroom virtuel" />
+  <meta name="author" content="TheShellMaster" />
+  <meta property="og:title" content="La Collection — dix-sept voitures en 3D interactive" />
+  <meta property="og:description" content="De la Dacia Sandero à la Bugatti Chiron : faites pivoter chaque voiture, découvrez ses détails et sa fiche technique. Showroom 3D en Three.js." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://theshellmaster.github.io/car-showcase/" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="https://theshellmaster.github.io/car-showcase/" />
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"WebSite","name":"La Collection","url":"https://theshellmaster.github.io/car-showcase/","description":"Dix-sept voitures réelles en 3D interactive, de la plus accessible à la plus prestigieuse, avec leurs fiches techniques.","inLanguage":"fr","keywords":"voitures 3D, showroom virtuel, three.js, WebGL"}
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet" />
@@ -40,9 +52,8 @@
       <a href="#detail-0" id="nav-detail-0">Design</a>
       <a href="#detail-1" id="nav-detail-1">Châssis</a>
       <a href="#detail-2" id="nav-detail-2">Moteur</a>
-      <a href="#fiche">Fiche technique</a>
       <a href="docs.html">Documentation</a>
-      <a class="top-nav-drive" id="nav-drive" href="drive.html">Conduire</a>
+      <a class="top-nav-drive" href="#fiche">Fiche technique</a>
     </nav>
   </header>
 
@@ -59,7 +70,7 @@
         <p class="hero-kicker" id="hero-kicker"></p>
         <h1 class="hero-title" id="hero-title"></h1>
         <p class="hero-lead" id="hero-lead"></p>
-        <a class="hero-drive" id="hero-drive" href="drive.html">Prendre le volant</a>
+        <a class="hero-drive" href="#detail-0">Découvrir</a>
       </div>
       <div class="hero-hint" id="hint">
         <span class="hint-dot"></span>
@@ -68,17 +79,6 @@
     </section>
 
     <div id="details"></div>
-
-    <section class="view detail" data-view="specs" id="conduire">
-      <article class="card">
-        <h2>Prenez le volant</h2>
-        <p>
-          Un quartier entier à parcourir : rues, carrefours à feux, trafic. Accélérez, freinez, braquez,
-          changez de caméra : cette voiture répond en temps réel, avec ses propres performances.
-        </p>
-        <a class="card-link" id="card-drive" href="drive.html">Conduire en ville</a>
-      </article>
-    </section>
 
     <section class="view specs" data-view="specs" id="fiche">
       <div class="specs-inner">
@@ -93,6 +93,6 @@
   </footer>
 
   <script src="nogl.js?v=1"></script>
-  <script type="module" src="main.js?v=25"></script>
+  <script type="module" src="main.js?v=26"></script>
 </body>
 </html>

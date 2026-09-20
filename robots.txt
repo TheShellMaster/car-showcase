@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://theshellmaster.github.io/car-showcase/sitemap.xml

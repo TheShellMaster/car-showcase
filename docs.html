@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Documentation — La Collection</title>
-  <meta name="description" content="Documentation complète de la collection de voitures en 3D et du simulateur de conduite en ville : utilisation, commandes, architecture, déploiement, dépannage." />
+  <meta name="description" content="Documentation complète de la collection de voitures en 3D : utilisation, commandes, architecture, déploiement, dépannage." />
+  <meta name="keywords" content="three.js, WebGL, documentation, voitures 3D, glTF, Draco, showroom virtuel, GitHub Pages" />
+  <link rel="canonical" href="https://theshellmaster.github.io/car-showcase/docs.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet" />
@@ -16,7 +18,6 @@
     <a class="brand" href="index.html">Studio</a>
     <nav class="top-nav">
       <a href="index.html">Studio</a>
-      <a href="drive.html">Conduire</a>
       <a class="top-nav-drive" href="https://github.com/TheShellMaster/car-showcase">GitHub</a>
     </nav>
   </header>
@@ -28,7 +29,6 @@
         <a href="#presentation">Présentation</a>
         <a href="#acces">Accéder au site</a>
         <a href="#studio">Le studio</a>
-        <a href="#conduite">La conduite</a>
         <a href="#architecture">Architecture</a>
         <a href="#technique">Fonctionnement technique</a>
         <a href="#performance">Performance</a>
@@ -41,22 +41,19 @@
 
     <main class="docs-main">
       <p class="hero-kicker">Documentation</p>
-      <h1 class="docs-title">La Collection : dix-sept voitures, un quartier</h1>
+      <h1 class="docs-title">La Collection : dix-sept voitures en 3D</h1>
       <p class="docs-lead">
         Tout ce qu'il faut savoir pour utiliser, comprendre, modifier et déployer ce site :
-        un studio 3D interactif présentant dix-sept voitures, de la Dacia Sandero à la Bugatti Chiron, et un
-        simulateur de conduite dans un quartier de ville avec feux et trafic, réalisés en Three.js sans aucune
-        étape de compilation.
+        un studio 3D interactif présentant dix-sept voitures réelles, de la Dacia Sandero à la Bugatti Chiron, réalisé en Three.js sans aucune étape de compilation.
       </p>
 
       <section id="presentation">
         <h2>Présentation</h2>
-        <p>Le site se compose de quatre pages statiques :</p>
+        <p>Le site se compose de trois pages statiques :</p>
         <table class="docs-table">
           <thead><tr><th>Page</th><th>Rôle</th></tr></thead>
           <tbody>
             <tr><td><a href="index.html"><code>index.html</code></a></td><td>La collection. Un sélecteur de dix-sept voitures classées de la plus accessible à la plus prestigieuse ; pour chacune, la voiture réagit au pointeur et chaque section défilée déclenche un mouvement de caméra vers un détail (design, châssis, moteur, habitacle) puis la fiche technique.</td></tr>
-            <tr><td><a href="drive.html"><code>drive.html</code></a></td><td>La conduite en ville, avec la voiture choisie et ses performances réelles. Un quartier de 470 m de côté, 36 carrefours à feux, trafic autonome, trois caméras, mini-carte, compteur et son moteur synthétisé.</td></tr>
             <tr><td><code>docs.html</code></td><td>Cette page.</td></tr>
             <tr><td><a href="status.html"><code>status.html</code></a></td><td>Diagnostic autonome (sans CDN) : teste en une seconde le réseau, le CDN, WebGL et la compatibilité du navigateur.</td></tr>
           </tbody>
@@ -93,11 +90,10 @@ python3 -m http.server 8765</code></pre>
         <h3>La collection</h3>
         <p>
           Dix-sept voitures, classées de la moins prestigieuse à la plus prestigieuse : Dacia Sandero, Renault Clio, Volkswagen Golf GTI, Toyota GR Yaris, Peugeot 508, Volkswagen Tiguan, Tesla Model 3, Audi RS 3, Porsche 911 Carrera 4S, BMW X5 M Competition, Mercedes-AMG G 63, Aston Martin DB11, Ferrari 458 Spider, Lamborghini Revuelto, Rolls-Royce Phantom, Koenigsegg Jesko, Bugatti Chiron Super Sport. Le sélecteur (colonne à droite sur ordinateur, bandeau en bas sur téléphone) et les flèches
-          <kbd>←</kbd> <kbd>→</kbd> du clavier changent de voiture ; l'adresse de la page mémorise le choix (<code>?car=911</code>)
-          et le bouton « Prendre le volant » ouvre la conduite avec cette voiture.
+          <kbd>←</kbd> <kbd>→</kbd> du clavier changent de voiture ; l'adresse de la page mémorise le choix (<code>?car=911</code>).
         </p>
         <p>
-          Les modèles 3D sont des créations d'artistes publiées sur Sketchfab sous licence Creative Commons (crédits dans la fiche de chaque voiture et dans <code>assets/cars/real/credits.json</code>), optimisées pour le web (Draco, textures WebP 1024). Textes, fiches techniques et performances de conduite sont ceux des voitures réelles.
+          Les modèles 3D sont des créations d'artistes publiées sur Sketchfab sous licence Creative Commons (crédits dans la fiche de chaque voiture et dans <code>assets/cars/real/credits.json</code>), optimisées pour le web (Draco, textures WebP 1024). Textes et fiches techniques sont ceux des voitures réelles.
         </p>
         <h3>Commandes</h3>
         <table class="docs-table">
@@ -108,7 +104,7 @@ python3 -m http.server 8765</code></pre>
             <tr><td>Tactile</td><td>Glisser horizontalement</td><td>Rotation de la voiture avec inertie.</td></tr>
             <tr><td>Tactile</td><td>Glisser verticalement</td><td>Défilement normal de la page.</td></tr>
             <tr><td>Clavier</td><td><kbd>←</kbd> <kbd>→</kbd></td><td>Voiture précédente / suivante.</td></tr>
-            <tr><td>Tous</td><td>Liens du haut de page</td><td>Sauter directement à une section ou à la conduite.</td></tr>
+            <tr><td>Tous</td><td>Liens du haut de page</td><td>Sauter directement à une section.</td></tr>
           </tbody>
         </table>
         <h3>Sections</h3>
@@ -120,58 +116,6 @@ python3 -m http.server 8765</code></pre>
         </p>
       </section>
 
-      <section id="conduite">
-        <h2>La conduite</h2>
-        <h3>Le quartier</h3>
-        <p>
-          Un damier de six rues par six (470 m de côté), à deux voies avec trottoirs, 36 carrefours à feux tricolores,
-          des immeubles de commerce au centre, des tours dans le cœur, des maisons et des arbres en périphérie, des
-          lampadaires. Une vingtaine de voitures de la collection circulent en respectant les feux et les distances ; elles
-          tournent aux carrefours au hasard. On peut monter sur les trottoirs et heurter les bâtiments (la voiture perd de la
-          vitesse), et percuter le trafic (répulsion simple). <kbd>R</kbd> remet la voiture dans la voie la plus proche.
-          La mini-carte en haut à droite montre le plan, la position, le trafic et l'état des feux.
-        </p>
-        <p>
-          Chaque voiture conduit différemment : accélération, freinage, vitesse maximale et adhérence viennent de sa fiche
-          (<code>drive</code> dans <code>cars.js</code>). Une Sandero plafonne à 175 km/h et braque large ; une Chiron
-          dépasse 400 km/h en ligne droite… si la rue est assez longue.
-        </p>
-        <h3>Clavier (ordinateur)</h3>
-        <table class="docs-table">
-          <thead><tr><th>Touche</th><th>Action</th></tr></thead>
-          <tbody>
-            <tr><td><kbd>↑</kbd> ou <kbd>Z</kbd> / <kbd>W</kbd></td><td>Accélérer</td></tr>
-            <tr><td><kbd>↓</kbd> ou <kbd>S</kbd></td><td>Freiner, puis marche arrière</td></tr>
-            <tr><td><kbd>←</kbd> <kbd>→</kbd> ou <kbd>Q</kbd> / <kbd>A</kbd> <kbd>D</kbd></td><td>Braquer</td></tr>
-            <tr><td><kbd>Espace</kbd></td><td>Frein à main</td></tr>
-            <tr><td><kbd>C</kbd></td><td>Changer de caméra</td></tr>
-            <tr><td><kbd>M</kbd></td><td>Couper ou rétablir le son</td></tr>
-            <tr><td>Souris</td><td>Regarder autour de la voiture (caméra poursuite) ou tourner la tête (caméra capot)</td></tr>
-          </tbody>
-        </table>
-        <h3>Écran tactile</h3>
-        <p>
-          En bas à gauche, un <strong>curseur de direction</strong> analogique : plus on l'écarte du centre,
-          plus la voiture braque ; il revient au centre dès qu'on le relâche. En bas à droite, deux boutons
-          <strong>Frein</strong> et <strong>Gaz</strong>. Glisser ailleurs sur l'écran oriente le regard. Le bouton
-          « Caméra » en haut à droite change de point de vue.
-        </p>
-        <h3>Caméras</h3>
-        <table class="docs-table">
-          <thead><tr><th>Mode</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td>Poursuite</td><td>Derrière la voiture, s'éloigne et s'élargit avec la vitesse, pivote avec le pointeur. Recule un peu sur les écrans en portrait.</td></tr>
-            <tr><td>Capot</td><td>Posée sur le capot, juste devant le pare-brise. Le pointeur tourne la tête.</td></tr>
-            <tr><td>Cinéma</td><td>Vue trois quarts avant, basse, qui pivote avec le pointeur.</td></tr>
-          </tbody>
-        </table>
-        <h3>Affichage</h3>
-        <p>
-          Le HUD indique la vitesse (km/h), le rapport engagé et le régime moteur. Le son est synthétisé avec la Web Audio API
-          à partir du régime : aucun fichier audio n'est chargé. Il ne démarre qu'après une première interaction, comme l'exigent les navigateurs.
-        </p>
-      </section>
-
       <section id="architecture">
         <h2>Architecture</h2>
         <table class="docs-table">
@@ -179,17 +123,11 @@ python3 -m http.server 8765</code></pre>
           <tbody>
             <tr><td><code>index.html</code></td><td>Structure du studio : canevas, écran de chargement, en-tête, sélecteur de voitures, sections générées.</td></tr>
             <tr><td><code>main.js</code></td><td>Scène du studio : rendu, ombres, préréglages de caméra, sélecteur, bascule animée entre voitures, interaction souris et tactile.</td></tr>
-            <tr><td><code>cars.js</code></td><td>Les dix-sept voitures : textes, fiche technique, couleur, modèle 3D, performances de conduite.</td></tr>
-            <tr><td><code>vehicles.js</code></td><td>Chargeur commun : normalise l'échelle et l'orientation, recolore les modèles Quaternius (matériaux séparés) et Kenney (atlas partagé, découpe des triangles par teinte dominante), recentre les roues pour les animer.</td></tr>
-            <tr><td><code>city.js</code></td><td>Quartier procédural : carte de tuiles, instanciation par modèle et par secteur (niveau de détail selon la distance), feux tricolores, test de roulabilité.</td></tr>
+            <tr><td><code>cars.js</code></td><td>Les dix-sept voitures : textes, fiche technique, couleur, modèle 3D, crédit.</td></tr>
+            <tr><td><code>vehicles.js</code></td><td>Chargeur des modèles : orientation, échelle réelle, roues regroupées en pivots, peinture vernie, vitres, optiques, fusion des maillages.</td></tr>
             <tr><td><code>styles.css</code></td><td>Styles communs (variables, en-tête, cartes, écran de chargement) et styles du studio, avec les variantes mobiles.</td></tr>
-            <tr><td><code>drive.html</code></td><td>Structure de la conduite : canevas, écran de départ, HUD, légende, contrôles tactiles.</td></tr>
-            <tr><td><code>drive.js</code></td><td>Conduite : physique du joueur, collisions avec trottoirs et bâtiments, trafic autonome (graphe des carrefours, feux, distances), caméras, HUD, mini-carte, son, qualité adaptative, entrées clavier et tactiles.</td></tr>
-            <tr><td><code>drive.css</code></td><td>Styles propres à la conduite.</td></tr>
             <tr><td><code>docs.html</code>, <code>docs.css</code></td><td>Cette documentation.</td></tr>
-            <tr><td><code>assets/cars/</code></td><td>Voitures CC0 : cinq silhouettes Quaternius (<code>q-*.glb</code>, 160–180 Ko) et le Car Kit Kenney (<code>kenney/*.glb</code> + atlas <code>colormap.png</code>).</td></tr>
-            <tr><td><code>assets/city/</code></td><td>City Kit Kenney (CC0) : tuiles de route, feux, lampadaires (<code>roads/</code>), immeubles et tours (<code>commercial/</code>), maisons et arbres (<code>suburban/</code>), chacun avec son atlas.</td></tr>
-            <tr><td><code>assets/ferrari.glb</code></td><td>Ancien modèle réaliste de la 458 (759 Ko), conservé pour référence.</td></tr>
+            <tr><td><code>assets/cars/real/</code></td><td>Les dix-sept modèles réalistes (glTF binaire, Draco, WebP) et <code>credits.json</code>.</td></tr>
             <tr><td><code>vendor/three/</code></td><td>Three.js 0.170 et ses addons (<code>GLTFLoader</code>, <code>DRACOLoader</code>, <code>RoomEnvironment</code>, <code>BufferGeometryUtils</code>) et décodeur Draco (<code>draco_wasm_wrapper.js</code> + <code>draco_decoder.wasm</code>) servis depuis le dépôt — plus de dépendance CDN.</td></tr>
             <tr><td><code>status.html</code></td><td>Page de diagnostic autonome, sans dépendance externe, pour tester réseau, CDN et WebGL depuis le téléphone.</td></tr>
           </tbody>
@@ -210,23 +148,6 @@ python3 -m http.server 8765</code></pre>
           réalistes sur la carrosserie sans télécharger d'image HDR. La peinture est un <code>MeshPhysicalMaterial</code> bleu nuit
           avec vernis (<code>clearcoat</code>) ; les vitres sont semi-transparentes par opacité, ce qui est bien moins coûteux
           que la transmission physique sur les puces graphiques intégrées.
-        </p>
-        <h3>Physique de la voiture</h3>
-        <p>
-          La conduite repose sur le moteur physique <strong>Rapier</strong> (WebAssembly, servi depuis <code>vendor/rapier/</code>).
-          Le châssis est un corps rigide dont la masse et l'inertie viennent de la fiche de la voiture ; quatre roues à
-          suspension par lancer de rayons (raideur, amortissement, débattement, adhérence des pneus) le portent. Le moteur
-          applique une force aux roues motrices (traction, propulsion ou intégrale selon la voiture) modulée par une courbe
-          de couple et le rapport engagé : boîte à sept rapports en automatique, marche arrière sur frein maintenu à
-          l'arrêt, frein moteur, frein à main sur l'arrière, traînée aérodynamique et résistance au roulement. La simulation
-          tourne à pas fixe (1/120 s) indépendamment de la fréquence d'images.
-        </p>
-        <h3>La ville comme monde physique</h3>
-        <p>
-          Le sol, les trottoirs (16 cm, que l'on peut monter avec un à-coup), les îlots bâtis et les voitures du trafic sont
-          des colliders Rapier : les chocs contre un immeuble arrêtent la voiture sans la retourner, une voiture heurtée
-          pile. Visuellement, la chaussée, les marquages, les lampadaires, les immeubles et les arbres sont des objets
-          instanciés par secteur ; les secteurs lointains passent en boîtes simplifiées puis disparaissent dans le brouillard.
         </p>
         <h3>Caméra</h3>
         <p>
@@ -280,24 +201,17 @@ git push</code></pre>
       <section id="modifier">
         <h2>Modifier le projet</h2>
         <h3>Changer la couleur de la voiture</h3>
-        <p>Dans <code>main.js</code> et <code>drive.js</code>, la couleur de la peinture est définie sur <code>bodyMaterial.color</code>. La variable CSS <code>--paint</code> de <code>styles.css</code> sert aux accents de l'interface.</p>
-        <h3>Changer le modèle 3D</h3>
+        <p>La couleur de pastille de chaque voiture est <code>paint</code> dans <code>cars.js</code> ; la peinture 3D est celle de l'artiste (ou <code>recolor: true</code> pour la forcer). La variable CSS <code>--paint</code> de <code>styles.css</code> sert aux accents de l'interface.</p>
+        <h3>Ajouter une voiture</h3>
         <p>
-          Remplacer <code>assets/ferrari.glb</code> par un autre fichier glTF. Les noms de matériaux utilisés pour recolorer la
-          carrosserie, les vitres et les détails sont recherchés dans le modèle ; il faut les adapter dans les deux scripts.
-          Compresser le fichier en Draco (<code>gltf-transform draco</code>) garde un temps de chargement raisonnable.
+          Déposer un fichier <code>.glb</code> dans <code>assets/cars/real/</code> (idéalement optimisé avec gltf-transform :
+          Draco, textures 1024), puis ajouter une entrée dans <code>cars.js</code> : textes, fiche, <code>vehicle</code>
+          (<code>src</code>, <code>forward</code> selon l'orientation du modèle, <code>length</code> réelle, éventuellement
+          <code>paintMaterial</code>) et le <code>credit</code> de l'artiste. Le tri par prix et le sélecteur se mettent à jour seuls.
         </p>
         <h3>Ajuster les préréglages de caméra du studio</h3>
         <p>L'objet <code>views</code> dans <code>main.js</code> associe chaque <code>data-view</code> à une position, une cible et un champ de vision. Les valeurs sont en mètres, dans le repère de la voiture.</p>
-        <h3>Régler le comportement de la voiture</h3>
-        <p>
-          Les performances de chaque voiture sont dans <code>cars.js</code> (<code>drive</code> : <code>vmax</code>, <code>accel</code>,
-          <code>brake</code>, <code>grip</code>, <code>mass</code>, <code>redline</code>) ; la transmission (traction, propulsion,
-          intégrale) est déduite de la fiche. Le comportement général (suspension, courbe de couple, rapports de boîte,
-          direction) se règle dans <code>physics.js</code> : <code>createVehicle</code> pour les roues et la suspension,
-          <code>GEAR_RATIOS</code> et <code>torqueCurve</code> pour la transmission. La ville est décrite dans <code>city.js</code>
-          (<code>TILE</code>, <code>PERIOD</code>, <code>ROADS</code>, <code>HALF_ROAD</code>, <code>LANE</code>).
-        </p>
+
       </section>
 
       <section id="depannage">
@@ -346,10 +260,8 @@ git push</code></pre>
       <section id="credits">
         <h2>Crédits et licences</h2>
         <ul>
-          <li>Voitures : <a href="https://quaternius.com/">Quaternius</a> (Cars Bundle) et <a href="https://kenney.nl/assets/car-kit">Kenney</a> (Car Kit), licence <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>, repeintes pour la collection.</li>
-          <li>Ville : <a href="https://kenney.nl/">Kenney</a> City Kit (Roads, Commercial, Suburban), licence CC0.</li>
-          <li>Ancien modèle réaliste : <em>Ferrari 458 Spider</em> par vicent091036, licence <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, distribué avec les exemples de Three.js.</li>
-          <li>Moteur de rendu : <a href="https://threejs.org/">Three.js</a>, licence MIT.</li>
+          <li>Voitures : modèles d'artistes publiés sur <a href="https://sketchfab.com/">Sketchfab</a> sous licences Creative Commons ; le crédit et la licence de chaque modèle sont dans la fiche technique de la voiture et dans <code>assets/cars/real/credits.json</code>.</li>
+                    <li>Moteur de rendu : <a href="https://threejs.org/">Three.js</a>, licence MIT.</li>
           <li>Compression : <a href="https://google.github.io/draco/">Draco</a>, licence Apache 2.0.</li>
           <li>Police : <a href="https://fonts.google.com/specimen/Archivo">Archivo</a>, licence SIL Open Font.</li>
           <li>Les caractéristiques techniques et les prix indicatifs sont ceux des voitures de série ; les noms de marques et de modèles sont cités à titre descriptif.</li>

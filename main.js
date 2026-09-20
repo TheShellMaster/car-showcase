@@ -206,9 +206,6 @@ function boot() {
     kicker: document.getElementById("hero-kicker"),
     title: document.getElementById("hero-title"),
     lead: document.getElementById("hero-lead"),
-    heroDrive: document.getElementById("hero-drive"),
-    cardDrive: document.getElementById("card-drive"),
-    navDrive: document.getElementById("nav-drive"),
     details: document.getElementById("details"),
     specBody: document.getElementById("spec-body"),
     railList: document.getElementById("rail-list"),
@@ -230,8 +227,6 @@ function boot() {
     el.kicker.textContent = `${car.rank} / ${CARS.length} · ${car.tier} · ${car.origin}, ${car.years}`;
     el.title.innerHTML = `${car.brand}<br />${car.model}`;
     el.lead.textContent = `${car.lead} ${finePointer ? "Déplacez la souris pour tourner autour, faites défiler pour approcher." : "Glissez pour tourner autour, faites défiler pour approcher."}`;
-    const driveUrl = `drive.html?car=${car.id}`;
-    el.heroDrive.href = el.cardDrive.href = el.navDrive.href = driveUrl;
 
     el.details.innerHTML = car.sections
       .map(
