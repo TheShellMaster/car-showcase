@@ -400,7 +400,8 @@ function dressSketchfab(model, spec) {
     });
     if (paintMat.normalScale) physical.normalScale.copy(paintMat.normalScale);
     physical.clearcoat = 1.0;
-    physical.clearcoatRoughness = 0.06;
+    physical.clearcoatRoughness = 0.03;
+    physical.envMapIntensity = 1.2;
     if (spec.paint && (spec.recolor || !physical.map)) physical.color.set(spec.paint);
     // Sans texture métal/rugosité, on impose un aspect peinture ; avec, on respecte l'auteur.
     if (!physical.metalnessMap && !physical.roughnessMap) {
@@ -414,21 +415,39 @@ function dressSketchfab(model, spec) {
     });
     paintMat = physical;
   }
-  // Les vitres deviennent teintées et brillantes.
+  // Vitres teintées et brillantes ; optiques légèrement lumineuses (phares blancs, feux rouges) ;
+  // chromes et jantes plus nets. Les matériaux d'optiques sont mémorisés pour les feux de la conduite.
+  const lamps = { head: [], tail: [] };
+  const seenMats = new Set();
   model.traverse((o) => {
     if (!o.isMesh) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     for (const m of mats) {
-      if (m && GLASS_RE.test(m.name || "") && !/light|lamp|phare/i.test(m.name || "")) {
+      if (!m || seenMats.has(m)) continue;
+      seenMats.add(m);
+      const n = m.name || "";
+      if (m.envMapIntensity !== undefined) m.envMapIntensity = 1.15;
+      if (GLASS_RE.test(n) && !/light|lamp|phare|feu/i.test(n)) {
         m.transparent = true;
         m.opacity = Math.min(m.opacity ?? 1, 0.45);
         m.roughness = 0.05;
         m.metalness = 0.5;
         m.depthWrite = false;
+      } else if (/tail|brake|rear.?light|feu|stop/i.test(n) && /light|lamp|glass|feu|stop/i.test(n)) {
+        m.emissive = new THREE.Color(0xff2a2a);
+        m.emissiveIntensity = 0.35;
+        lamps.tail.push(m);
+      } else if (/head.?light|headlamp|phare|light_glass|lightglass|\blights?\b|lamp/i.test(n) && !/interior|int_|dash|plate|day/i.test(n)) {
+        m.emissive = new THREE.Color(0xeaf2ff);
+        m.emissiveIntensity = 0.25;
+        lamps.head.push(m);
+      } else if (/chrome|rim|wheel|alloy|jante|felge/i.test(n) && !/tire|tyre|rubber|pneu/i.test(n)) {
+        if (m.metalness !== undefined && !m.metalnessMap) m.metalness = Math.max(m.metalness, 0.85);
+        if (m.roughness !== undefined && !m.roughnessMap) m.roughness = Math.min(m.roughness, 0.3);
       }
     }
   });
-  return { wheels, radius, paint: paintMat };
+  return { wheels, radius, paint: paintMat, lamps };
 }
 
 // Fusionne les maillages de carrosserie par matériau (hors roues) : un modèle Sketchfab compte
@@ -532,7 +551,7 @@ async function preparedSketchfab(spec) {
   };
   walk(t.model, model);
   const wheels = { all: srcPivots.map((p) => map.get(p)), front: t.wheels.front.map((p) => map.get(p)) };
-  return { model, wheels, paint: t.paint, radius: t.radius };
+  return { model, wheels, paint: t.paint, radius: t.radius, lamps: t.lamps };
 }
 
 export async function loadVehicle(spec) {
@@ -544,7 +563,7 @@ export async function loadVehicle(spec) {
     const r = await preparedSketchfab(spec);
     model = r.model;
     wheels = r.wheels;
-    materials = { paint: r.paint, accent: r.paint };
+    materials = { paint: r.paint, accent: r.paint, lamps: r.lamps };
     modelWheelRadius = r.radius;
   } else {
     const gltf = await loadGltf(spec.src);

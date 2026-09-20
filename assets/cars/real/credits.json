@@ -88,5 +88,68 @@
     "license": "CC Attribution",
     "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
     "faces": 186746
+  },
+  "gryaris": {
+    "name": "2020 Toyota GR Yaris",
+    "author": "DisneyCars",
+    "authorUrl": "https://sketchfab.com/supercarmodels",
+    "url": "https://sketchfab.com/3d-models/2020-toyota-gr-yaris-44cb958908b94aa5aad0d856994f35a3",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 26419
+  },
+  "model3": {
+    "name": "Tesla 2018 Model 3",
+    "author": "Ameer Studio",
+    "authorUrl": "https://sketchfab.com/uchiha.321abc",
+    "url": "https://sketchfab.com/3d-models/tesla-2018-model-3-5ef9b845aaf44203b6d04e2c677e444f",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 684315
+  },
+  "golf": {
+    "name": "2014 Volkswagen Golf GTI Mk7",
+    "author": "Ddiaz Design",
+    "authorUrl": "https://sketchfab.com/ddiaz-design",
+    "url": "https://sketchfab.com/3d-models/2014-volkswagen-golf-gti-mk7-93f2b79c56c14b269fbe914205c4712e",
+    "license": "CC Attribution-NonCommercial-ShareAlike",
+    "licenseUrl": "http://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "faces": 98695
+  },
+  "g63": {
+    "name": "Mersedes-Benz G63 AMG",
+    "author": "Black Snow",
+    "authorUrl": "https://sketchfab.com/BlackSnow02",
+    "url": "https://sketchfab.com/3d-models/mersedes-benz-g63-amg-e5e2a1d2238048a1a494b3df983c16bb",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 445970
+  },
+  "db11": {
+    "name": "2017 Aston Martin DB11 [5.2L Twin-Turbo V12]",
+    "author": "Hari Prasath R",
+    "authorUrl": "https://sketchfab.com/Haris3D",
+    "url": "https://sketchfab.com/3d-models/2017-aston-martin-db11-52l-twin-turbo-v12-936854ba7dde46f09a47d355d433808c",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 296094
+  },
+  "jesko": {
+    "name": "2020 Koenigsegg Jesko",
+    "author": "Ddiaz Design",
+    "authorUrl": "https://sketchfab.com/ddiaz-design",
+    "url": "https://sketchfab.com/3d-models/2020-koenigsegg-jesko-c657f51fb0db43e38fea172dfa385287",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 78215
+  },
+  "phantom": {
+    "name": "rollsroyce phantom",
+    "author": "Jaggu_wrld",
+    "authorUrl": "https://sketchfab.com/jagathkrishna148",
+    "url": "https://sketchfab.com/3d-models/rollsroyce-phantom-1a2f117c8f1b4324b5a5dd70d38d396b",
+    "license": "CC Attribution",
+    "licenseUrl": "http://creativecommons.org/licenses/by/4.0/",
+    "faces": 428556
   }
 }

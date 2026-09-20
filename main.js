@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=8";
-import { loadVehicle } from "./vehicles.js?v=15";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=10";
+import { loadVehicle } from "./vehicles.js?v=16";
 
 const canvas = document.getElementById("scene");
 const loaderBar = document.getElementById("loader-bar");
@@ -34,12 +34,36 @@ function boot() {
 
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.7;
+  scene.environment = pmrem.fromScene(studioEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 1.0;
+
+  // Studio photo : une pièce sombre avec de longues boîtes à lumière, comme en publicité automobile.
+  // Les reflets allongés dessinent les volumes de la carrosserie bien mieux qu'une lumière diffuse.
+  function studioEnvironment() {
+    const env = new THREE.Scene();
+    const room = new THREE.Mesh(new THREE.BoxGeometry(30, 12, 30), new THREE.MeshStandardMaterial({ color: 0x3a3d43, side: THREE.BackSide, roughness: 1, metalness: 0 }));
+    room.position.y = 5;
+    env.add(room);
+    const panel = (w, h, color, intensity, pos, rot) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide }));
+      m.position.set(...pos);
+      m.rotation.set(...rot);
+      env.add(m);
+    };
+    panel(14, 2.2, 0xffffff, 18, [0, 10.5, 0], [Math.PI / 2, 0, 0]); // grande rampe au plafond
+    panel(9, 1.4, 0xfff4e6, 9, [0, 9.5, -6], [Math.PI / 2 + 0.35, 0, 0]); // seconde rampe, chaude
+    panel(6, 4, 0xdde8ff, 5, [-13, 3.5, 0], [0, Math.PI / 2, 0]); // panneau latéral froid
+    panel(6, 3, 0xffffff, 3.5, [13, 3, 4], [0, -Math.PI / 2, 0]); // panneau latéral doux
+    panel(10, 2, 0xffffff, 2.5, [0, 2.2, 13], [0, Math.PI, 0]); // fond bas, pour les flancs
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 1 }));
+    floor.rotation.x = -Math.PI / 2;
+    env.add(floor);
+    return env;
+  }
 
   const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
 
-  const key = new THREE.DirectionalLight(0xffffff, 2.4);
+  const key = new THREE.DirectionalLight(0xffffff, 1.8);
   key.position.set(3, 6, 2);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -51,12 +75,38 @@ function boot() {
   key.shadow.normalBias = 0.04; // évite l'acné d'ombre sur les carrosseries fines
   key.shadow.radius = 4;
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xdfe6f2, 0.7);
+  const fill = new THREE.DirectionalLight(0xdfe6f2, 0.5);
   fill.position.set(-5, 2, -4);
   scene.add(fill);
+  // Contre-jour froid : détache la silhouette du fond clair.
+  const rim = new THREE.DirectionalLight(0xcfe0ff, 1.2);
+  rim.position.set(-2, 3, 6);
+  scene.add(rim);
 
-  // Sol d'ombre : invisible, ne reçoit que l'ombre portée.
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.28 }));
+  // Plateau : disque légèrement brillant qui reflète le studio, fondu vers le fond, et reçoit l'ombre.
+  const plateau = (() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 256;
+    const g = c.getContext("2d").createRadialGradient(128, 128, 40, 128, 128, 128);
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.6, "rgba(255,255,255,0.7)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 256);
+    const alpha = new THREE.CanvasTexture(c);
+    const mesh = new THREE.Mesh(
+      new THREE.CircleGeometry(9, 64),
+      new THREE.MeshStandardMaterial({ color: 0xd9dde4, roughness: 0.22, metalness: 0.0, envMapIntensity: 0.9, transparent: true, alphaMap: alpha, depthWrite: false })
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = -0.005;
+    mesh.receiveShadow = true;
+    return mesh;
+  })();
+  scene.add(plateau);
+  // Ombre portée : sol d'ombre séparé (le disque brillant ne rend pas l'ombre assez lisible seul).
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.3 }));
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
@@ -205,7 +255,10 @@ function boot() {
         .map(([k, v]) => `<tr><th scope="row">${SPEC_LABELS[k] || k}</th><td>${v}</td></tr>`)
         .join("") +
       `<tr><th scope="row">Prix indicatif</th><td>${car.price}</td></tr>` +
-      `<tr><th scope="row">Production</th><td>${car.origin}, ${car.years}</td></tr>`;
+      `<tr><th scope="row">Production</th><td>${car.origin}, ${car.years}</td></tr>` +
+      (car.credit
+        ? `<tr><th scope="row">Modèle 3D</th><td><a href="${car.credit.url}" rel="noopener">${car.credit.title}</a> par ${car.credit.author}, licence ${car.credit.license}</td></tr>`
+        : "");
 
     [...el.railList.children].forEach((li) => li.classList.toggle("current", li.dataset.id === car.id));
     const cur = el.railList.querySelector(".current");

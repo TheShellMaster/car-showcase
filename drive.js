@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { CARS, carFromLocation, rememberCar } from "./cars.js?v=8";
-import { loadVehicle, animateWheels } from "./vehicles.js?v=15";
+import { CARS, carFromLocation, rememberCar } from "./cars.js?v=10";
+import { loadVehicle, animateWheels } from "./vehicles.js?v=16";
 import { initPhysics, createWorld, createVehicle, createKinematicCar } from "./physics.js?v=4";
 import { buildCity, updateLOD, isDrivable, tileOf, tileAt, tileX, tileZ, road, T, TILE, SIDE, ROADS, LANE, HALF_ROAD, PERIOD } from "./city.js?v=7";
 
@@ -165,7 +165,7 @@ async function boot() {
   // Trafic : les modèles réalistes les plus légers, maillages fusionnés, en nombre mesuré.
   const TRAFFIC_COUNT = finePointer ? 12 : 7;
   const traffic = [];
-  const LIGHT = new Set(["sandero", "clio", "rs3", "911", "458", "revuelto", "chiron"]);
+  const LIGHT = new Set(["sandero", "clio", "golf", "gryaris", "model3", "rs3", "911", "458", "revuelto", "db11", "phantom", "jesko", "chiron"]);
   const trafficSpecs = CARS.filter((c) => LIGHT.has(c.id));
   const rnd = (n) => Math.floor(Math.random() * n);
 
@@ -372,6 +372,10 @@ async function boot() {
     if (e.code === "KeyR") resetCar();
     if (e.code === "KeyC") cycleCamera();
     if (e.code === "KeyM") toggleSound();
+    if (e.code === "KeyL") lights.head = !lights.head;
+    if (e.code === "KeyH") lights.horn = 1;
+    if (e.code === "Comma" || e.code === "KeyE") lights.indicator = lights.indicator === -1 ? 0 : -1; // gauche
+    if (e.code === "Period" || e.code === "KeyT") lights.indicator = lights.indicator === 1 ? 0 : 1; // droite
   });
   window.addEventListener("keyup", (e) => {
     const k = keyMap[e.code];
@@ -493,6 +497,39 @@ async function boot() {
     // Un choc avec une voiture du trafic la fait réagir (elle pile).
     if (phys.state.impact > 0.3) {
       for (const ai of traffic) if (Math.hypot(ai.x - car.x, ai.z - car.z) < CAR.halfLength + ai.length / 2 + 0.5) ai.speed *= 0.3;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Éclairage de la voiture : feux stop sur la pédale, phares, clignotants (touches E / T ou , / .),
+  // marche arrière. Les matériaux d'optiques viennent du chargeur ; on module leur émission.
+
+  const lights = { head: false, indicator: 0, blink: 0, horn: 0 };
+  const lamps = player.materials.lamps || { head: [], tail: [] };
+  const headBase = lamps.head.map((m) => m.emissiveIntensity);
+  const tailBase = lamps.tail.map((m) => m.emissiveIntensity);
+  function stepLights(dt) {
+    lights.blink = (lights.blink + dt) % 0.8;
+    const on = lights.blink < 0.4;
+    const braking = keys.brake && car.v > 0.5;
+    const reversing = phys.state.reverse && car.v < -0.3;
+    lamps.tail.forEach((m, k) => {
+      m.emissiveIntensity = braking ? 2.2 : lights.head ? 0.8 : tailBase[k];
+      // Clignotant : les feux arrière clignotent en orange (approximation : on ne sait pas quel côté).
+      if (lights.indicator !== 0 && on) {
+        m.emissive.setHex(0xffa020);
+        m.emissiveIntensity = 2.0;
+      } else m.emissive.setHex(reversing ? 0xffffff : 0xff2a2a);
+    });
+    lamps.head.forEach((m, k) => {
+      m.emissiveIntensity = lights.head ? 2.5 : headBase[k];
+    });
+    lights.horn = Math.max(0, lights.horn - dt * 4);
+    // Le clignotant se coupe tout seul après un virage franc.
+    if (lights.indicator !== 0 && Math.abs(car.steer) > 0.2 && Math.sign(car.steer) === lights.indicator && Math.abs(car.v) > 2) lights.indicatorArmed = true;
+    if (lights.indicatorArmed && Math.abs(car.steer) < 0.05) {
+      lights.indicator = 0;
+      lights.indicatorArmed = false;
     }
   }
 
@@ -705,6 +742,7 @@ async function boot() {
     const dt = Math.min(rawDt, 0.25);
     if (driving) simulate(dt);
     phys.sync(dt);
+    stepLights(dt);
     city.stepLights(dt);
     stepTraffic(Math.min(dt, 0.05));
     stepCamera(Math.min(dt, 0.05));

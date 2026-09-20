@@ -1,8 +1,8 @@
-# La Collection — dix voitures en 3D et un quartier à conduire
+# La Collection — dix-sept voitures en 3D et un quartier à conduire
 
 Site statique en Three.js, sans build : trois pages HTML, du CSS et quelques modules JS.
 
-- `index.html` — la collection : dix voitures, de la Dacia Sandero à la Bugatti Chiron, dans un studio 3D.
+- `index.html` — la collection : dix-sept voitures, de la Dacia Sandero à la Bugatti Chiron, dans un studio 3D.
   La voiture réagit à la souris (ou au glisser sur mobile), les sections scrollées changent la caméra et
   mettent en avant un détail (design, châssis, moteur, habitacle, fiche technique). Sélecteur de voiture
   à droite (ou en bas sur téléphone), flèches ← → au clavier.
@@ -28,7 +28,7 @@ Puis ouvrir <http://localhost:8765/>. Depuis un téléphone sur le même réseau
 
 | Fichier | Rôle |
 | --- | --- |
-| `cars.js` | Les dix voitures : textes, fiche technique, couleur, modèle 3D, performances de conduite |
+| `cars.js` | Les dix-sept voitures : textes, fiche technique, couleur, modèle 3D, performances de conduite |
 | `vehicles.js` | Chargeur commun : échelle, orientation, recoloration des modèles Quaternius et Kenney, roues animables |
 | `main.js` / `styles.css` | Studio : scène, ombres, presets de caméra, sélecteur, bascule entre voitures, rotation tactile |
 | `city.js` | Quartier procédural : carte de tuiles, instanciation par secteur avec niveau de détail, feux, roulabilité |

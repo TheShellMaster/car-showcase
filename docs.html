@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Documentation — La Collection</title>
-  <meta name="description" content="Documentation complète du studio interactif et du simulateur d'autoroute 458 Spider : utilisation, commandes, architecture, déploiement, dépannage." />
+  <meta name="description" content="Documentation complète de la collection de voitures en 3D et du simulateur de conduite en ville : utilisation, commandes, architecture, déploiement, dépannage." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet" />
@@ -41,10 +41,10 @@
 
     <main class="docs-main">
       <p class="hero-kicker">Documentation</p>
-      <h1 class="docs-title">La Collection : dix voitures, un quartier</h1>
+      <h1 class="docs-title">La Collection : dix-sept voitures, un quartier</h1>
       <p class="docs-lead">
         Tout ce qu'il faut savoir pour utiliser, comprendre, modifier et déployer ce site :
-        un studio 3D interactif présentant dix voitures, de la Dacia Sandero à la Bugatti Chiron, et un
+        un studio 3D interactif présentant dix-sept voitures, de la Dacia Sandero à la Bugatti Chiron, et un
         simulateur de conduite dans un quartier de ville avec feux et trafic, réalisés en Three.js sans aucune
         étape de compilation.
       </p>
@@ -55,7 +55,7 @@
         <table class="docs-table">
           <thead><tr><th>Page</th><th>Rôle</th></tr></thead>
           <tbody>
-            <tr><td><a href="index.html"><code>index.html</code></a></td><td>La collection. Un sélecteur de dix voitures classées de la plus accessible à la plus prestigieuse ; pour chacune, la voiture réagit au pointeur et chaque section défilée déclenche un mouvement de caméra vers un détail (design, châssis, moteur, habitacle) puis la fiche technique.</td></tr>
+            <tr><td><a href="index.html"><code>index.html</code></a></td><td>La collection. Un sélecteur de dix-sept voitures classées de la plus accessible à la plus prestigieuse ; pour chacune, la voiture réagit au pointeur et chaque section défilée déclenche un mouvement de caméra vers un détail (design, châssis, moteur, habitacle) puis la fiche technique.</td></tr>
             <tr><td><a href="drive.html"><code>drive.html</code></a></td><td>La conduite en ville, avec la voiture choisie et ses performances réelles. Un quartier de 470 m de côté, 36 carrefours à feux, trafic autonome, trois caméras, mini-carte, compteur et son moteur synthétisé.</td></tr>
             <tr><td><code>docs.html</code></td><td>Cette page.</td></tr>
             <tr><td><a href="status.html"><code>status.html</code></a></td><td>Diagnostic autonome (sans CDN) : teste en une seconde le réseau, le CDN, WebGL et la compatibilité du navigateur.</td></tr>
@@ -92,16 +92,12 @@ python3 -m http.server 8765</code></pre>
         <h2>Le studio</h2>
         <h3>La collection</h3>
         <p>
-          Dix voitures, classées de la moins prestigieuse à la plus prestigieuse : Dacia Sandero, Renault Clio, Peugeot 508,
-          Volkswagen Tiguan, Audi RS 3, BMW X5 M Competition, Porsche 911 Carrera GTS, Ferrari 458 Spider, Lamborghini Revuelto,
-          Bugatti Chiron Super Sport. Le sélecteur (colonne à droite sur ordinateur, bandeau en bas sur téléphone) et les flèches
+          Dix-sept voitures, classées de la moins prestigieuse à la plus prestigieuse : Dacia Sandero, Renault Clio, Volkswagen Golf GTI, Toyota GR Yaris, Peugeot 508, Volkswagen Tiguan, Tesla Model 3, Audi RS 3, Porsche 911 Carrera 4S, BMW X5 M Competition, Mercedes-AMG G 63, Aston Martin DB11, Ferrari 458 Spider, Lamborghini Revuelto, Rolls-Royce Phantom, Koenigsegg Jesko, Bugatti Chiron Super Sport. Le sélecteur (colonne à droite sur ordinateur, bandeau en bas sur téléphone) et les flèches
           <kbd>←</kbd> <kbd>→</kbd> du clavier changent de voiture ; l'adresse de la page mémorise le choix (<code>?car=911</code>)
           et le bouton « Prendre le volant » ouvre la conduite avec cette voiture.
         </p>
         <p>
-          Les modèles 3D sont des assets libres (CC0) de Quaternius et Kenney, repeints aux couleurs de chaque marque : les
-          silhouettes sont stylisées, volontairement cohérentes entre elles, mais les textes, fiches techniques et
-          performances de conduite sont ceux des voitures réelles.
+          Les modèles 3D sont des créations d'artistes publiées sur Sketchfab sous licence Creative Commons (crédits dans la fiche de chaque voiture et dans <code>assets/cars/real/credits.json</code>), optimisées pour le web (Draco, textures WebP 1024). Textes, fiches techniques et performances de conduite sont ceux des voitures réelles.
         </p>
         <h3>Commandes</h3>
         <table class="docs-table">
@@ -183,7 +179,7 @@ python3 -m http.server 8765</code></pre>
           <tbody>
             <tr><td><code>index.html</code></td><td>Structure du studio : canevas, écran de chargement, en-tête, sélecteur de voitures, sections générées.</td></tr>
             <tr><td><code>main.js</code></td><td>Scène du studio : rendu, ombres, préréglages de caméra, sélecteur, bascule animée entre voitures, interaction souris et tactile.</td></tr>
-            <tr><td><code>cars.js</code></td><td>Les dix voitures : textes, fiche technique, couleur, modèle 3D, performances de conduite.</td></tr>
+            <tr><td><code>cars.js</code></td><td>Les dix-sept voitures : textes, fiche technique, couleur, modèle 3D, performances de conduite.</td></tr>
             <tr><td><code>vehicles.js</code></td><td>Chargeur commun : normalise l'échelle et l'orientation, recolore les modèles Quaternius (matériaux séparés) et Kenney (atlas partagé, découpe des triangles par teinte dominante), recentre les roues pour les animer.</td></tr>
             <tr><td><code>city.js</code></td><td>Quartier procédural : carte de tuiles, instanciation par modèle et par secteur (niveau de détail selon la distance), feux tricolores, test de roulabilité.</td></tr>
             <tr><td><code>styles.css</code></td><td>Styles communs (variables, en-tête, cartes, écran de chargement) et styles du studio, avec les variantes mobiles.</td></tr>
@@ -217,24 +213,20 @@ python3 -m http.server 8765</code></pre>
         </p>
         <h3>Physique de la voiture</h3>
         <p>
-          La simulation tourne à pas fixe (<code>FIXED_DT</code> = 1/120 s), indépendamment de la fréquence d'images : si le
-          navigateur ralentit, plusieurs pas sont exécutés par image, mais la voiture se comporte pareil. Le modèle est un « vélo » :
-          une vitesse longitudinale, un angle de braquage limité par la vitesse, une traînée, une boîte à 7 rapports déduite de
-          la vitesse. Le roulis et le tangage sont appliqués à un pivot séparé (<code>bodyPivot</code>) pour ne jamais perturber
-          la position réelle du véhicule.
+          La conduite repose sur le moteur physique <strong>Rapier</strong> (WebAssembly, servi depuis <code>vendor/rapier/</code>).
+          Le châssis est un corps rigide dont la masse et l'inertie viennent de la fiche de la voiture ; quatre roues à
+          suspension par lancer de rayons (raideur, amortissement, débattement, adhérence des pneus) le portent. Le moteur
+          applique une force aux roues motrices (traction, propulsion ou intégrale selon la voiture) modulée par une courbe
+          de couple et le rapport engagé : boîte à sept rapports en automatique, marche arrière sur frein maintenu à
+          l'arrêt, frein moteur, frein à main sur l'arrière, traînée aérodynamique et résistance au roulement. La simulation
+          tourne à pas fixe (1/120 s) indépendamment de la fréquence d'images.
         </p>
-        <h3>Glissières</h3>
+        <h3>La ville comme monde physique</h3>
         <p>
-          Les barrières latérale et centrale sont des murs. Au contact, la voiture perd une partie de sa vitesse une seule fois,
-          puis « racle » le mur : sa vitesse ne décroît que dans la mesure où elle pointe vers le mur, et son cap est ramené
-          progressivement parallèle à la route. On ne reste donc jamais coincé.
-        </p>
-        <h3>Route infinie</h3>
-        <p>
-          La chaussée, les marquages, les glissières, les lampadaires, les arbres, les collines et le pont sont des objets
-          répétés dont la position est recalée sur celle de la voiture à chaque image (modulo leur période). Les éléments
-          nombreux sont des <code>InstancedMesh</code> ; comme leurs instances bougent en permanence, le <em>frustum culling</em>
-          est désactivé sur eux, sinon la sphère englobante figée au premier rendu les ferait disparaître après quelques centaines de mètres.
+          Le sol, les trottoirs (16 cm, que l'on peut monter avec un à-coup), les îlots bâtis et les voitures du trafic sont
+          des colliders Rapier : les chocs contre un immeuble arrêtent la voiture sans la retourner, une voiture heurtée
+          pile. Visuellement, la chaussée, les marquages, les lampadaires, les immeubles et les arbres sont des objets
+          instanciés par secteur ; les secteurs lointains passent en boîtes simplifiées puis disparaissent dans le brouillard.
         </p>
         <h3>Caméra</h3>
         <p>
@@ -299,10 +291,12 @@ git push</code></pre>
         <p>L'objet <code>views</code> dans <code>main.js</code> associe chaque <code>data-view</code> à une position, une cible et un champ de vision. Les valeurs sont en mètres, dans le repère de la voiture.</p>
         <h3>Régler le comportement de la voiture</h3>
         <p>
-          Dans <code>drive.js</code>, l'objet <code>CAR</code> fixe la géométrie et les vitesses limites (<code>vmax</code>,
-          <code>reverseMax</code>), <code>ROAD</code> décrit la chaussée (largeur des voies, position des glissières) et le tableau
-          <code>GEARS_KMH</code> donne les seuils de passage des sept rapports. Accélération, freinage, traînée et braquage
-          sont appliqués dans la fonction <code>stepCar</code>, à chaque pas fixe.
+          Les performances de chaque voiture sont dans <code>cars.js</code> (<code>drive</code> : <code>vmax</code>, <code>accel</code>,
+          <code>brake</code>, <code>grip</code>, <code>mass</code>, <code>redline</code>) ; la transmission (traction, propulsion,
+          intégrale) est déduite de la fiche. Le comportement général (suspension, courbe de couple, rapports de boîte,
+          direction) se règle dans <code>physics.js</code> : <code>createVehicle</code> pour les roues et la suspension,
+          <code>GEAR_RATIOS</code> et <code>torqueCurve</code> pour la transmission. La ville est décrite dans <code>city.js</code>
+          (<code>TILE</code>, <code>PERIOD</code>, <code>ROADS</code>, <code>HALF_ROAD</code>, <code>LANE</code>).
         </p>
       </section>
 
