@@ -15,16 +15,81 @@ const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("vendor/three/examples/jsm/libs/draco/gltf/");
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
-const cache = new Map();
+
+// Cache global pour les GLTF chargées
+const gltfCache = new Map();
+
+// Cache global pour les véhicules prêts (avec matériaux, roues, etc.)
+const vehicleCache = new Map();
+
+// Limite de chargements concurrents
+const MAX_CONCURRENT_LOADS = 2;
+let activeLoads = 0;
+const loadQueue = [];
+
+// Nettoyage mémoire : désalloue les véhicules non utilisés depuis > 30s
+const vehicleUsage = new Map();
+let lastCleanupTime = 0;
+const CLEANUP_INTERVAL = 30000; // 30 secondes
+
+function cleanupUnusedVehicles() {
+  const now = Date.now();
+  if (now - lastCleanupTime < CLEANUP_INTERVAL) return;
+  lastCleanupTime = now;
+  
+  for (const [key, timestamp] of vehicleUsage) {
+    if (now - timestamp > CLEANUP_INTERVAL) {
+      vehicleCache.delete(key);
+      vehicleUsage.delete(key);
+    }
+  }
+}
+
+function markVehicleUsed(key) {
+  vehicleUsage.set(key, Date.now());
+}
 
 function loadGltf(url) {
-  if (!cache.has(url)) {
-    cache.set(
+  if (!gltfCache.has(url)) {
+    gltfCache.set(
       url,
-      new Promise((resolve, reject) => gltfLoader.load(url, resolve, undefined, reject))
+      new Promise((resolve, reject) => {
+        gltfLoader.load(url, resolve, undefined, reject);
+      })
     );
   }
-  return cache.get(url);
+  return gltfCache.get(url);
+}
+
+// Fonction de chargement avec queue
+async function queuedLoad(url) {
+  return new Promise((resolve, reject) => {
+    const load = async () => {
+      activeLoads++;
+      try {
+        const result = await loadGltf(url);
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      } finally {
+        activeLoads--;
+        processQueue();
+      }
+    };
+    
+    if (activeLoads < MAX_CONCURRENT_LOADS) {
+      load();
+    } else {
+      loadQueue.push(load);
+    }
+  });
+}
+
+function processQueue() {
+  while (activeLoads < MAX_CONCURRENT_LOADS && loadQueue.length > 0) {
+    const nextLoad = loadQueue.shift();
+    nextLoad();
+  }
 }
 
 // Matériaux communs, pour que toutes les voitures partagent le même rendu de peinture.
@@ -522,7 +587,7 @@ async function preparedSketchfab(spec) {
   if (!prepared.has(key)) {
     prepared.set(
       key,
-      loadGltf(spec.src).then((gltf) => {
+      queuedLoad(spec.src).then((gltf) => {
         const model = gltf.scene.clone(true);
         // Un clone par matériau source (et non par maillage) : les maillages qui partagent un
         // matériau doivent continuer à le partager pour pouvoir être fusionnés.
@@ -555,6 +620,7 @@ async function preparedSketchfab(spec) {
 }
 
 export async function loadVehicle(spec) {
+  cleanupUnusedVehicles();
   let model;
   let wheels = { front: [], all: [] };
   let materials;
@@ -566,7 +632,7 @@ export async function loadVehicle(spec) {
     materials = { paint: r.paint, accent: r.paint, lamps: r.lamps };
     modelWheelRadius = r.radius;
   } else {
-    const gltf = await loadGltf(spec.src);
+    const gltf = await queuedLoad(spec.src);
     model = gltf.scene.clone(true);
     // Chaque instance a ses propres matériaux et géométries de roues.
     model.traverse((o) => {

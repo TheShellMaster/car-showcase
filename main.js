@@ -10,6 +10,8 @@ const hint = document.getElementById("hint");
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const finePointer = window.matchMedia("(pointer: fine)").matches;
+const isMobile = window.matchMedia("(max-width: 768px)").matches;
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 const fail = (message) => {
   loaderText.textContent = message;
@@ -61,9 +63,17 @@ function boot() {
     return env;
   }
 
-  const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
+  // FOV ajusté pour mobile (plus large pour compenser la distance de vue)
+  const cameraFOV = isMobile ? 45 : 36;
+  const camera = new THREE.PerspectiveCamera(cameraFOV, window.innerWidth / window.innerHeight, 0.1, 100);
 
   const key = new THREE.DirectionalLight(0xffffff, 1.8);
+  
+  if (isMobile) {
+    camera.position.set(0, 1.8, 8);
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.radius = 2;
+  }
   key.position.set(3, 6, 2);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -270,12 +280,52 @@ function boot() {
         <span class="rail-name"><strong>${c.brand}</strong> ${c.model}</span>
       </button></li>`
     ).join("");
-    el.railList.addEventListener("click", (e) => {
-      const b = e.target.closest(".rail-item");
-      if (b) showCar(b.dataset.id);
-    });
+    
+    if (isTouchDevice) {
+      let touchStartX = 0, touchStartY = 0, isSwiping = false;
+      el.railList.addEventListener("touchstart", (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isSwiping = false;
+      }, { passive: true });
+      el.railList.addEventListener("touchmove", (e) => {
+        if (!touchStartX) return;
+        const dx = Math.abs(e.touches[0].clientX - touchStartX);
+        const dy = Math.abs(e.touches[0].clientY - touchStartY);
+        if (dx > 10 || dy > 10) {
+          isSwiping = true;
+          if (dx > dy && dx > 50) {
+            const swipeDir = e.touches[0].clientX < touchStartX ? -1 : 1;
+            if (dx > window.innerWidth * 0.15) {
+              step(swipeDir);
+              touchStartX = 0;
+              e.preventDefault();
+            }
+          }
+        }
+      }, { passive: false });
+      el.railList.addEventListener("touchend", (e) => {
+        if (!isSwiping && touchStartX) {
+          const b = e.target.closest(".rail-item");
+          if (b) showCar(b.dataset.id);
+        }
+        touchStartX = 0;
+        isSwiping = false;
+      });
+    } else {
+      el.railList.addEventListener("click", (e) => {
+        const b = e.target.closest(".rail-item");
+        if (b) showCar(b.dataset.id);
+      });
+    }
     document.getElementById("rail-prev").addEventListener("click", () => step(-1));
     document.getElementById("rail-next").addEventListener("click", () => step(1));
+    if (isMobile) {
+      document.getElementById("rail-prev").style.padding = "15px 20px";
+      document.getElementById("rail-next").style.padding = "15px 20px";
+      document.getElementById("rail-prev").style.fontSize = "24px";
+      document.getElementById("rail-next").style.fontSize = "24px";
+    }
     window.addEventListener("keydown", (e) => {
       if (e.target.closest("input, textarea")) return;
       if (e.key === "ArrowRight") step(1);
@@ -287,6 +337,13 @@ function boot() {
     const i = CARS.findIndex((c) => c.id === current?.id);
     const next = CARS[(i + dir + CARS.length) % CARS.length];
     showCar(next.id);
+    if (isMobile) {
+      const btn = dir > 0 ? document.getElementById("rail-next") : document.getElementById("rail-prev");
+      if (btn) {
+        btn.style.transform = "scale(0.95)";
+        setTimeout(() => { btn.style.transform = "scale(1)"; }, 150);
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -315,7 +372,13 @@ function boot() {
 
     // Transition : l'ancienne sort d'un côté, la nouvelle entre de l'autre.
     if (vehicle) {
-      if (swap.outgoing) pivot.remove(swap.outgoing); // bascule interrompue : on nettoie la précédente
+      if (swap.outgoing) {
+        pivot.remove(swap.outgoing);
+        // Désallocation mémoire des anciennes voitures
+        if (swap.outgoing.parent === null) {
+          disposeGroup(swap.outgoing);
+        }
+      }
       swap.outgoing = vehicle.group;
       swap.dir = car.rank >= prevRank ? 1 : -1;
       swap.t = 0;
@@ -333,7 +396,7 @@ function boot() {
       loaderBar.style.width = "100%";
       requestAnimationFrame(() => document.body.classList.add("ready"));
     }
-    // Précharge les voisines pour une bascule instantanée.
+    // Précharge les voisines pour une bascule instantanée (max 2 chargements simultanés gérés par la queue dans vehicles.js)
     const i = CARS.indexOf(car);
     [CARS[i + 1], CARS[i - 1]].filter(Boolean).forEach((c) => loadVehicle({ ...c.vehicle, paint: c.paint, accent: c.accent }).catch(() => {}));
   }
@@ -345,11 +408,32 @@ function boot() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    const newIsMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (newIsMobile !== isMobile) location.reload();
   });
 
   const clock = new THREE.Clock();
   const tmpTarget = new THREE.Vector3();
   const damp = (a, b, l, dt) => THREE.MathUtils.damp(a, b, l, dt);
+
+  // Fonction pour désallouer un groupe 3D et ses ressources
+  function disposeGroup(group) {
+    if (!group) return;
+    group.traverse((obj) => {
+      if (obj.isMesh) {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          mats.forEach((mat) => {
+            ["map", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap", "alphaMap", "aoMap"].forEach((prop) => {
+              if (mat[prop]) mat[prop].dispose();
+            });
+            mat.dispose();
+          });
+        }
+      }
+    });
+  }
 
   function animate() {
     const dt = Math.min(clock.getDelta(), 0.05);
@@ -370,6 +454,7 @@ function boot() {
       if (vehicle) vehicle.group.position.x = -swap.dir * 9 * (1 - e);
       if (swap.t >= 1 && swap.outgoing) {
         pivot.remove(swap.outgoing);
+        disposeGroup(swap.outgoing);
         swap.outgoing = null;
       }
     }

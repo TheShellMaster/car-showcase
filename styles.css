@@ -477,6 +477,17 @@ body.ready .loader {
   display: none;
 }
 
+.rail-arrow {
+  transition: all 200ms ease;
+}
+.rail-arrow:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+.rail-arrow:hover {
+  background: rgba(21, 24, 29, 0.05);
+}
+
 .rail.loading .rail-list .current .rail-item {
   animation: railPulse 900ms ease-in-out infinite;
 }
@@ -551,6 +562,9 @@ body.ready .loader {
     background: transparent;
     border: 1px solid var(--line);
     border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .foot {
@@ -659,6 +673,16 @@ body.ready .loader {
   .card-link {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
+  }
+  
+  .rail-arrow {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.2rem;
+  }
+  
+  .rail-item {
+    padding: 0.5rem 0.8rem 0.6rem;
   }
 }
 
