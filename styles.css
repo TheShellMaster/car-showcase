@@ -592,12 +592,20 @@ body.ready .loader {
     padding-bottom: 4rem;
   }
 
+  .specs {
+    padding-bottom: 10rem;
+  }
+
   .hero {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
     gap: 1.5rem;
-    padding-bottom: 7rem; /* laisse la place au sélecteur de voitures */
+    padding-bottom: 7rem;
+  }
+
+  .hero-copy {
+    max-width: 90%;
   }
 
   .hero-copy {
@@ -607,6 +615,7 @@ body.ready .loader {
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-top: 2px solid var(--ink);
+    max-width: 90%;
   }
 
   .hero-title {
@@ -632,10 +641,17 @@ body.ready .loader {
     align-items: flex-end;
   }
 
+  .card {
+    max-width: 100%;
+    margin-bottom: 1rem;
+  }
+
   .card,
   .specs-inner {
     width: 100%;
     padding: 1.5rem 1.25rem 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
   }
 
   .card h2,
